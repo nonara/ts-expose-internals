@@ -16,20 +16,28 @@ set -e
 # #################################################################################################################### #
 
 build() {
-  TAG=$0
-  echo "Building types for $TAG ..."
+  set -e
+
+  TAG=$1
 
   # Build Types file
-  outFile=$(buildTypes "$TAG")
-
-  if [ ! -f "$outFile" ]
-  then
-    echo "Could not find output file $outFile!"
-    exit 1
-  fi
+  [ ! -f "${OUT_DIR}/${TAG}/index.d.ts" ] && buildTypes "$TAG" || echo "Already built $TAG"
 
   # Publish Package
+}
 
+isIn() {
+  set -e
+
+  TAG=$1
+
+  for val in $SKIP_VERSIONS
+  do
+    case $val in
+      $TAG) echo "$val";;
+      *) :;;
+    esac
+  done
 }
 
 # #################################################################################################################### #
@@ -37,11 +45,11 @@ build() {
 # #################################################################################################################### #
 
 # Get our tags
-ourTags=$(git tag -l | awk '/^v[0-9]/')
+ourTags=$(git tag -l | awk -v test="$GIT_TAG_REGEX" '$1~test')
 
 # Get TS tags
 cd ./TypeScript
-tsTags=$(git tag -l | awk '/^v[0-9]/')
+tsTags=$(git tag -l | awk -v test="$GIT_TAG_REGEX" '$1~test')
 cd ..
 
 # Compare tags and build for each tag we don't have
@@ -49,6 +57,10 @@ for TAG in $tsTags
 do
   case $TAG in
     $ourTags) :;; # noop - skip tags we already have
-    *) build "$TAG";;
+    *)
+      buildTag=$(isIn "$TAG")
+      [ -z "$buildTag" ] && build "$TAG" || echo "Skipping $TAG (in skip list) ..."
   esac
 done
+
+echo "Done with all builds"

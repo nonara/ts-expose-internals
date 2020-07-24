@@ -1,0 +1,19 @@
+{
+  "include": [ "scripts" ],
+
+  "compilerOptions": {
+    "noEmit": true,
+
+    "lib": [ "esnext" ],
+    "target": "ESNext",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+
+    "strict": true,
+    "declaration": true,
+    "preserveConstEnums": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "preserveSymlinks": true
+  }
+}

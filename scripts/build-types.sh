@@ -1,3 +1,5 @@
+set -e
+
 # #################################################################################################################### #
 # Imports
 # #################################################################################################################### #
@@ -11,47 +13,65 @@
 # #################################################################################################################### #
 
 buildTypes() {
-  version=$0
+  set -e
+
   PWD=$(pwd)
 
+  # Parse and validate version tag
+  version=$(echo "$1" | awk -v test="$GIT_TAG_REGEX" '$1~test')
   if [ -z "$version" ]
   then
-    echo "Must supply a version tag as a parameter (ie. v3.9.6)"
+    echo "Must supply a version tag (3.8+) as a parameter (ie. v3.9.6)"
     exit 1
   fi
 
-  cd "${ROOT_DIR}/TypeScript" || exit 1
+  echo "Building types for $version ..."
+  echo
+
+  cd "${ROOT_PATH}/TypeScript" || exit 1
 
   # Reset environment
   git clean -xfd # deletes any untracted existing artifacts including node_modules
   git fetch origin
-  git checkout "$version"
+  git checkout --force "$version"
 
   # Install dependencies
+  echo "Installing dependencies ..."
+  echo
   npm install
 
   # Prepare code
-  node ../scripts/process.js pre-build
+  echo "Pre-processing code ..."
+  echo
+  node -r ts-node/register ../scripts/process.ts pre-build
 
   # Build Compiler
+  echo "Building compiler ..."
+  echo
   npm run build:compiler
 
   # Copy output file
-  outFile="typescript-${version}.d.ts"
-  mkdir -p "$OUT_DIR"
-  cp ./built/local/typescriptServices.d.ts "${OUT_DIR}/${outFile}"
+  outFilePath="${OUT_DIR}/${version}/index.d.ts"
+  mkdir -p "$OUT_DIR/$version"
+  cp ./built/local/typescriptServices.d.ts "$outFilePath"
 
-  if [ ! -f "$outFile" ]
+  if [ ! -f "$outFilePath" ]
   then
-    echo "Could not generated find file $outFile"
+    echo "Could not find generated file $outFilePath"
     exit 1
   fi
 
   # Run post-build fixes
-  node ../scripts/process.js post-build "$outFile"
+  echo "Post-processing types ..."
+  echo
+  node -r ts-node/register ../scripts/process.ts post-build "$version"
 
+  # Type-Check generated file
+  echo "Checking types ..."
+  echo
+  cd $ROOT_PATH || exit
+  ./node_modules/typescript/bin/tsc $outFilePath
+
+  echo "Finished building package for $version!"
   cd "$PWD" || exit 1
-
-  # Return file name
-  echo "$outFile"
 }

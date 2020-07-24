@@ -41,16 +41,25 @@ isIn() {
   done
 }
 
+getTags() {
+  set -e
+  [ -z "$1" ] && DIR="$ROOT_PATH" || DIR="$1"
+
+  echo "$(
+    cd "$DIR";
+    git fetch --all --tags -q;
+    git tag -l | awk -v test="$GIT_TAG_REGEX" '$1~test'
+  )"
+}
+
 
 # #################################################################################################################### #
 # Iterate Tags & Build
 # #################################################################################################################### #
 
-# Get our tags
-ourTags=$(cd "$ROOT_PATH"; git tag -l | awk -v test="$GIT_TAG_REGEX" '$1~test')
-
-# Get TS tags
-tsTags=$(cd "${ROOT_PATH}/TypeScript"; git tag -l | awk -v test="$GIT_TAG_REGEX" '$1~test')
+# Sync and get lists of repository tags
+ourTags=$(getTags)
+tsTags=$(getTags "${ROOT_PATH}/TypeScript")
 
 # Compare tags and build for each tag we don't have
 for TAG in $tsTags

@@ -19,17 +19,23 @@ build() {
   set -e
   TAG=$1
 
-  # Build Types file
-  [ ! -f "${OUT_DIR}/${TAG}/index.d.ts" ] && buildTypes "$TAG" || printf "Already built %s\n" "$TAG"
+  cd "$OUT_DIR" || exit 1
 
-  # Publish Package
+  # Build Types file
+  if [ ! -f "${OUT_DIR}/${TAG}/index.d.ts" ]
+  then
+    buildTypes "$TAG"
+    npm publish "./$TAG"
+  else
+    printf "Already built %s\n" "$TAG"
+  fi
 }
 
 isIn() {
   set -e
   TAG=$1
   LIST=$2
-  [ -z $3 ] && DELIMITER=" " || DELIMITER=$3
+  [ -z "$3" ] && DELIMITER=" " || DELIMITER=$3
 
   IFS="$DELIMITER"
   for val in $LIST
@@ -57,6 +63,8 @@ getTags() {
 # Iterate Tags & Build
 # #################################################################################################################### #
 
+PWD=$(pwd)
+
 # Sync and get lists of repository tags
 ourTags=$(getTags)
 tsTags=$(getTags "${ROOT_PATH}/TypeScript")
@@ -76,5 +84,7 @@ do
     fi
   fi
 done
+
+cd "$PWD"
 
 printf "\nDone with all builds!\n"

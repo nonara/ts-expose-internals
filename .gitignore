@@ -6,7 +6,7 @@
 /node_modules
 
 # TS repo
-TypeScript
+/TypeScript
 
 # Output files
 /out/*

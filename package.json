@@ -6,7 +6,7 @@
   "license": "MIT",
   "types": "index.d.ts",
   "scripts": {
-    "clean": "rimraf out",
+    "clean": "rimraf out TypeScript node_modules && echo Cleaned environment. Remember to re-initialize by running npm install",
     "prepare": "[ ! -d './TypeScript' ] && git clone https://github.com/microsoft/TypeScript.git"
   },
   "author": {

@@ -18,7 +18,7 @@ OUT_DIR="${ROOT_PATH}/out"
 # Minimum git version 3.8
 GIT_TAG_REGEX='^v([3]\\.[8-9]|[4-9]\\.|\\d{2,}).+$'
 
-# Skip version (these won't compile)
+# Skip version tags (these won't compile)
 SKIP_VERSIONS="v3.9-beta v3.9-rc v3.9.2 v3.9.3 v3.9.5"
 
 

@@ -25,8 +25,7 @@ buildTypes() {
     exit 1
   fi
 
-  echo "Building types for $version ..."
-  echo
+  printf "Building types for %s ...\n\n" "$version"
 
   cd "${ROOT_PATH}/TypeScript" || exit 1
 
@@ -36,8 +35,7 @@ buildTypes() {
   git checkout --force "$version"
 
   # Install dependencies
-  echo "Installing dependencies ..."
-  echo
+  printf "Installing dependencies ...\n\n"
   npm install
 
   # Prepare code
@@ -46,8 +44,7 @@ buildTypes() {
   node -r ts-node/register ../scripts/process.ts pre-build
 
   # Build Compiler
-  echo "Building compiler ..."
-  echo
+  printf "Building compiler ...\n\n"
   npm run build:compiler
 
   # Copy output file
@@ -57,21 +54,19 @@ buildTypes() {
 
   if [ ! -f "$outFilePath" ]
   then
-    echo "Could not find generated file $outFilePath"
+    printf "\nCould not find generated file %s\n" "$outFilePath"
     exit 1
   fi
 
   # Run post-build fixes
-  echo "Post-processing types ..."
-  echo
+  printf "Post-processing types ...\n\n"
   node -r ts-node/register ../scripts/process.ts post-build "$version"
 
   # Type-Check generated file
-  echo "Checking types ..."
-  echo
-  cd $ROOT_PATH || exit
-  ./node_modules/typescript/bin/tsc $outFilePath
+  printf "Checking types ...\n\n"
+  cd "$ROOT_PATH" || exit
+  ./node_modules/typescript/bin/tsc "$outFilePath"
 
-  echo "Finished building package for $version!"
+  printf "Finished building package for %s!\n\n" "$version"
   cd "$PWD" || exit 1
 }

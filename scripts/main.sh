@@ -21,7 +21,7 @@ build() {
   TAG=$1
 
   # Build Types file
-  [ ! -f "${OUT_DIR}/${TAG}/index.d.ts" ] && buildTypes "$TAG" || echo "Already built $TAG"
+  [ ! -f "${OUT_DIR}/${TAG}/index.d.ts" ] && buildTypes "$TAG" || printf "Already built %s\n" "$TAG"
 
   # Publish Package
 }
@@ -39,6 +39,7 @@ isIn() {
     esac
   done
 }
+
 
 # #################################################################################################################### #
 # Cron Activity
@@ -63,4 +64,4 @@ do
   esac
 done
 
-echo "Done with all builds"
+printf "\nDone with all builds!\n"

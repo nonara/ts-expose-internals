@@ -6,7 +6,8 @@
   "license": "MIT",
   "types": "index.d.ts",
   "scripts": {
-    "clean": "rimraf out"
+    "clean": "rimraf out",
+    "prepare": "[ ! -d './TypeScript' ] && git clone https://github.com/microsoft/TypeScript.git"
   },
   "author": {
     "name": "Ron S.",

@@ -1,3 +1,14 @@
-/out
-/node_modules
+# IDE
 /.idea
+/.vscode
+
+# Junk
+/node_modules
+
+# TS repo
+/TypeScript
+
+# Output files
+/out/*
+!/out/.npmrc
+/TypeScript/src/

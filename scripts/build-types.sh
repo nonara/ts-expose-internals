@@ -38,8 +38,7 @@ buildTypes() {
   npm install
 
   # Prepare code
-  echo "Pre-processing code ..."
-  echo
+  print "Pre-processing code ...\n\n"
   node -r ts-node/register ../scripts/process.ts pre-build
 
   # Build Compiler
@@ -63,7 +62,7 @@ buildTypes() {
 
   # Type-Check generated file
   printf "Checking types ...\n\n"
-  cd "$ROOT_PATH" || exit
+  cd "$ROOT_PATH" || exit 1
   ./node_modules/typescript/bin/tsc "$outFilePath"
 
   printf "Finished building package for %s!\n\n" "$version"

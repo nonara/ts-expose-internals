@@ -14,7 +14,6 @@ set -e
 
 buildTypes() {
   set -e
-
   PWD=$(pwd)
 
   # Parse and validate version tag

@@ -17,7 +17,6 @@ set -e
 
 build() {
   set -e
-
   TAG=$1
 
   # Build Types file
@@ -28,10 +27,12 @@ build() {
 
 isIn() {
   set -e
-
   TAG=$1
+  LIST=$2
+  [ -z $3 ] && DELIMITER=" " || DELIMITER=$3
 
-  for val in $SKIP_VERSIONS
+  IFS="$DELIMITER"
+  for val in $LIST
   do
     case $val in
       $TAG) echo "$val";;
@@ -42,26 +43,29 @@ isIn() {
 
 
 # #################################################################################################################### #
-# Cron Activity
+# Iterate Tags & Build
 # #################################################################################################################### #
 
 # Get our tags
-ourTags=$(git tag -l | awk -v test="$GIT_TAG_REGEX" '$1~test')
+ourTags=$(cd "$ROOT_PATH"; git tag -l | awk -v test="$GIT_TAG_REGEX" '$1~test')
 
 # Get TS tags
-cd ./TypeScript
-tsTags=$(git tag -l | awk -v test="$GIT_TAG_REGEX" '$1~test')
-cd ..
+tsTags=$(cd "${ROOT_PATH}/TypeScript"; git tag -l | awk -v test="$GIT_TAG_REGEX" '$1~test')
 
 # Compare tags and build for each tag we don't have
 for TAG in $tsTags
 do
-  case $TAG in
-    $ourTags) :;; # noop - skip tags we already have
-    *)
-      buildTag=$(isIn "$TAG")
-      [ -z "$buildTag" ] && build "$TAG" || echo "Skipping $TAG (in skip list) ..."
-  esac
+  # If it's not in our local tags
+  if [ -z "$(isIn "$TAG" "$ourTags" "$(printf "\n\b")")" ]
+  then
+    # And it's not in skip list
+    if [ -z "$(isIn "$TAG" "$SKIP_VERSIONS")" ]
+    then
+      build "$TAG"
+    else
+      echo "Skipping $TAG (in skip list) ..."
+    fi
+  fi
 done
 
 printf "\nDone with all builds!\n"

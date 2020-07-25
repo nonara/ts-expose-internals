@@ -72,4 +72,5 @@ buildTypes() {
 }
 
 # Execute if manually invoked by itself
-[ -n "$1" ] && buildTypes "$1"
+# shellcheck disable=SC2015
+[ -n "$1" ] && buildTypes "$1" || :

@@ -41,4 +41,5 @@ publishGit() {
 }
 
 # Execute if manually invoked by itself
-[ -n "$1" ] && publishGit "$1"
+# shellcheck disable=SC2015
+[ -n "$1" ] && publishGit "$1" || :

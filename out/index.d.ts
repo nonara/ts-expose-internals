@@ -6515,6 +6515,7 @@ declare module "typescript" {
         Top_level_await_expressions_are_only_allowed_when_the_module_option_is_set_to_esnext_or_system_and_the_target_option_is_set_to_es2017_or_higher: DiagnosticMessage;
         An_import_alias_cannot_reference_a_declaration_that_was_exported_using_export_type: DiagnosticMessage;
         An_import_alias_cannot_reference_a_declaration_that_was_imported_using_import_type: DiagnosticMessage;
+        Only_named_exports_may_use_export_type: DiagnosticMessage;
         The_types_of_0_are_incompatible_between_these_types: DiagnosticMessage;
         The_types_returned_by_0_are_incompatible_between_these_types: DiagnosticMessage;
         Call_signature_return_types_0_and_1_are_incompatible: DiagnosticMessage;
@@ -7136,7 +7137,7 @@ declare module "typescript" {
         File_0_is_not_under_rootDir_1_rootDir_is_expected_to_contain_all_source_files: DiagnosticMessage;
         Specify_the_end_of_line_sequence_to_be_used_when_emitting_files_Colon_CRLF_dos_or_LF_unix: DiagnosticMessage;
         NEWLINE: DiagnosticMessage;
-        Option_0_can_only_be_specified_in_tsconfig_json_file: DiagnosticMessage;
+        Option_0_can_only_be_specified_in_tsconfig_json_file_or_set_to_null_on_command_line: DiagnosticMessage;
         Enables_experimental_support_for_ES7_decorators: DiagnosticMessage;
         Enables_experimental_support_for_emitting_type_metadata_for_decorators: DiagnosticMessage;
         Enables_experimental_support_for_ES7_async_functions: DiagnosticMessage;
@@ -7297,6 +7298,7 @@ declare module "typescript" {
         Specify_strategy_for_watching_directory_on_platforms_that_don_t_support_recursive_watching_natively_Colon_UseFsEvents_default_FixedPollingInterval_DynamicPriorityPolling: DiagnosticMessage;
         Specify_strategy_for_creating_a_polling_watch_when_it_fails_to_create_using_file_system_events_Colon_FixedInterval_default_PriorityInterval_DynamicPriority: DiagnosticMessage;
         Synchronously_call_callbacks_and_update_the_state_of_directory_watchers_on_platforms_that_don_t_support_recursive_watching_natively: DiagnosticMessage;
+        Option_0_can_only_be_specified_in_tsconfig_json_file_or_set_to_false_or_null_on_command_line: DiagnosticMessage;
         Projects_to_reference: DiagnosticMessage;
         Enable_project_compilation: DiagnosticMessage;
         Composite_projects_may_not_disable_declaration_emit: DiagnosticMessage;
@@ -9097,6 +9099,7 @@ declare module "typescript" {
     function parsePseudoBigInt(stringValue: string): string;
     function pseudoBigIntToString({ negative, base10Value }: PseudoBigInt): string;
     function isValidTypeOnlyAliasUseSite(useSite: Node): boolean;
+    function typeOnlyDeclarationIsExport(typeOnlyDeclaration: Node): boolean;
 }
 declare module "typescript" {
     function createNode(kind: SyntaxKind, pos?: number, end?: number): Node;
@@ -9186,6 +9189,20 @@ declare module "typescript" {
     export function createCompilerDiagnosticForInvalidCustomType(opt: CommandLineOptionOfCustomType): Diagnostic;
     export function parseCustomTypeOption(opt: CommandLineOptionOfCustomType, value: string, errors: Push<Diagnostic>): string | number | undefined;
     export function parseListTypeOption(opt: CommandLineOptionOfListType, value: string | undefined, errors: Push<Diagnostic>): (string | number)[] | undefined;
+    export interface OptionsBase {
+        [option: string]: CompilerOptionsValue | TsConfigSourceFile | undefined;
+    }
+    export interface ParseCommandLineWorkerDiagnostics extends DidYouMeanOptionsDiagnostics {
+        getOptionsNameMap: () => OptionsNameMap;
+        optionTypeMismatchDiagnostic: DiagnosticMessage;
+    }
+    export function parseCommandLineWorker(diagnostics: ParseCommandLineWorkerDiagnostics, commandLine: readonly string[], readFile?: (path: string) => string | undefined): {
+        options: OptionsBase;
+        watchOptions: WatchOptions | undefined;
+        fileNames: string[];
+        errors: Diagnostic[];
+    };
+    export const compilerOptionsDidYouMeanDiagnostics: ParseCommandLineWorkerDiagnostics;
     export function parseCommandLine(commandLine: readonly string[], readFile?: (path: string) => string | undefined): ParsedCommandLine;
     /** @internal */
     export function getOptionFromName(optionName: string, allowShort?: boolean): CommandLineOption | undefined;

@@ -19,12 +19,11 @@ build() {
   set -e
   TAG=$1
 
-  cd "$OUT_DIR" || exit 1
-
   # Build Types file
   if [ ! -f "${OUT_DIR}/${TAG}/index.d.ts" ]
   then
     buildTypes "$TAG"
+    cd "$OUT_DIR" || exit 1
     npm publish "./$TAG"
   else
     printf "Already built %s\n" "$TAG"

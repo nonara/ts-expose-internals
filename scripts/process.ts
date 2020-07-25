@@ -53,6 +53,12 @@ const postBuildReplacements: [ RegExp, string ][] = [
 // region: Helpers
 /* ****************************************************************************************************************** */
 
+const fixVersion = (tag: string) => {
+  const { 1: major, 2: minor, 3: textTag, 4: patch } = tag.match(/^v(\d+?)\.(\d+)([^.]+)?\.?(.+)?/)!;
+  return `${major}.${minor}.${patch || 0}${textTag || ''}`;
+}
+
+
 const getRegexForLineBeginsWith = (line:string) => new RegExp(String.raw`^(\s*?)(${line})`, 'gm');
 const isNamespace = (node: Node): node is ModuleDeclaration =>
   ts.isModuleDeclaration(node) && !!(node.flags & NodeFlags.Namespace);
@@ -138,7 +144,7 @@ function postBuild(versionTag: string) {
   /* Copy package file */
   fs.copyFileSync(path.join(baseDir, 'package.json'), path.join(destPath, 'package.json'));
   replaceJsonInFile(path.join(destPath, 'package.json'), (pkg: any) => {
-    pkg.version = versionTag.replace(/^v/, '');
+    pkg.version = fixVersion(versionTag);
     pkg.private = false;
   });
 }

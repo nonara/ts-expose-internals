@@ -3,7 +3,7 @@
 
 # TypeScript Internal Types
 
-Expose TypeScript internal types by simply adding a single development dependency.
+Expose TypeScript internal types by simply adding a development dependency.
 
 ## Setup
 
@@ -25,7 +25,7 @@ Expose TypeScript internal types by simply adding a single development dependenc
     _Note:_
     
     _You can add this import line in any `.ts` file that is included in your project.  
-    It only needs to be added once to one file in the project for the types to be added._
+    It only needs to be added once to one file in the project for the types to be recognized._
 
 ## Usage
 All internal types are now available within the primary typescript module

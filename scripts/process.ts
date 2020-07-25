@@ -147,6 +147,7 @@ function postBuild(versionTag: string) {
     pkg.version = fixVersion(versionTag);
     pkg.private = false;
     delete pkg.scripts;
+    delete pkg.engines;
   });
 }
 

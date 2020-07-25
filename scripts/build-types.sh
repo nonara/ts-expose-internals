@@ -35,10 +35,10 @@ buildTypes() {
 
   # Install dependencies
   printf "Installing dependencies ...\n\n"
-  npm install --cache "${ROOT_PATH}/.cache"
+  npm install --cache "${ROOT_PATH}/.cache" --no-audit
 
   # Prepare code
-  print "Pre-processing code ...\n\n"
+  printf "Pre-processing code ...\n\n"
   node -r ts-node/register ../scripts/process.ts pre-build
 
   # Build Compiler

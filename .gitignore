@@ -5,8 +5,8 @@
 /.vscode
 
 # Junk
-/node_modules
-/.cache
+node_modules
+.cache
 
 # TS repo
 /TypeScript

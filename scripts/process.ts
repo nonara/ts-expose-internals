@@ -149,6 +149,9 @@ function postBuild(versionTag: string) {
     delete pkg.scripts;
     delete pkg.engines;
   });
+
+  /* Copy README.md */
+  fs.copyFileSync(path.join(baseDir, 'README.md'), path.join(destPath, 'README.md'));
 }
 
 // endregion

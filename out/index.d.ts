@@ -392,6 +392,11 @@ declare module "typescript" {
     function group<T>(values: readonly T[], getGroupId: (value: T) => string): readonly (readonly T[])[];
     function group<T, R>(values: readonly T[], getGroupId: (value: T) => string, resultSelector: (values: readonly T[]) => R): R[];
     function clone<T>(object: T): T;
+    /**
+     * Creates a new object by adding the own properties of `second`, then the own properties of `first`.
+     *
+     * NOTE: This means that if a property exists in both `first` and `second`, the property in `first` will be chosen.
+     */
     function extend<T1, T2>(first: T1, second: T2): T1 & T2;
     function copyProperties<T1 extends T2, T2>(first: T1, second: T2): void;
     function maybeBind<T, A extends any[], R>(obj: T, fn: ((this: T, ...args: A) => R) | undefined): ((...args: A) => R) | undefined;
@@ -437,6 +442,18 @@ declare module "typescript" {
     function identity<T>(x: T): T;
     /** Returns lower case string */
     function toLowerCase(x: string): string;
+    /**
+     * Case insensitive file systems have descripencies in how they handle some characters (eg. turkish Upper case I with dot on top - \u0130)
+     * This function is used in places where we want to make file name as a key on these systems
+     * It is possible on mac to be able to refer to file name with I with dot on top as a fileName with its lower case form
+     * But on windows we cannot. Windows can have fileName with I with dot on top next to its lower case and they can not each be referred with the lowercase forms
+     * Technically we would want this function to be platform sepcific as well but
+     * our api has till now only taken caseSensitive as the only input and just for some characters we dont want to update API and ensure all customers use those api
+     * We could use upper case and we would still need to deal with the descripencies but
+     * we want to continue using lower case since in most cases filenames are lowercasewe and wont need any case changes and avoid having to store another string for the key
+     * So for this function purpose, we go ahead and assume character I with dot on top it as case sensitive since its very unlikely to use lower case form of that special character
+     */
+    function toFileNameLowerCase(x: string): string;
     /** Throws an error because a function is not implemented. */
     function notImplemented(): never;
     function memoize<T>(callback: () => T): () => T;
@@ -718,6 +735,7 @@ declare module "typescript" {
     export type Path = string & {
         __pathBrand: any;
     };
+    export type MatchingKeys<TRecord, TMatch, K extends keyof TRecord = keyof TRecord> = K extends (TRecord[K] extends TMatch ? K : never) ? K : never;
     export interface TextRange {
         pos: number;
         end: number;
@@ -2385,6 +2403,7 @@ declare module "typescript" {
         name: Identifier;
     }
     export type ImportOrExportSpecifier = ImportSpecifier | ExportSpecifier;
+    export type TypeOnlyCompatibleAliasDeclaration = ImportClause | NamespaceImport | ImportOrExportSpecifier;
     /**
      * This is either an `export =` or an `export default` declaration.
      * Unless `isExportEquals` is set, this node was parsed as an `export default`.
@@ -3119,8 +3138,11 @@ declare module "typescript" {
          */
         tryGetMemberInModuleExportsAndProperties(memberName: string, moduleSymbol: Symbol): Symbol | undefined;
         getApparentType(type: Type): Type;
-        getSuggestionForNonexistentProperty(name: Identifier | string, containingType: Type): string | undefined;
+        getSuggestedSymbolForNonexistentProperty(name: Identifier | PrivateIdentifier | string, containingType: Type): Symbol | undefined;
+        getSuggestionForNonexistentProperty(name: Identifier | PrivateIdentifier | string, containingType: Type): string | undefined;
+        getSuggestedSymbolForNonexistentSymbol(location: Node, name: string, meaning: SymbolFlags): Symbol | undefined;
         getSuggestionForNonexistentSymbol(location: Node, name: string, meaning: SymbolFlags): string | undefined;
+        getSuggestedSymbolForNonexistentModule(node: Identifier, target: Symbol): Symbol | undefined;
         getSuggestionForNonexistentExport(node: Identifier, target: Symbol): string | undefined;
         getBaseConstraintOfType(type: Type): Type | undefined;
         getDefaultFromTypeParameter(type: Type): Type | undefined;
@@ -3219,7 +3241,7 @@ declare module "typescript" {
         None = 0,
         Signature = 1,
         NoConstraints = 2,
-        BaseConstraint = 4
+        Completions = 4
     }
     export enum NodeBuilderFlags {
         None = 0,
@@ -3238,6 +3260,7 @@ declare module "typescript" {
         UseTypeOfFunction = 4096,
         OmitParameterModifiers = 8192,
         UseAliasDefinedOutsideCurrentScope = 16384,
+        UseSingleQuotesForStringLiteralType = 268435456,
         AllowThisInObjectLiteral = 32768,
         AllowQualifedNameInPlaceOfIdentifier = 65536,
         AllowAnonymousIdentifier = 131072,
@@ -3266,6 +3289,7 @@ declare module "typescript" {
         UseTypeOfFunction = 4096,
         OmitParameterModifiers = 8192,
         UseAliasDefinedOutsideCurrentScope = 16384,
+        UseSingleQuotesForStringLiteralType = 268435456,
         AllowUniqueESSymbolType = 1048576,
         AddUndefined = 131072,
         WriteArrowStyleSignature = 262144,
@@ -3274,7 +3298,7 @@ declare module "typescript" {
         InFirstTypeArgument = 4194304,
         InTypeAlias = 8388608,
         /** @deprecated */ WriteOwnNameForAnyLike = 0,
-        NodeBuilderFlagsMask = 9469291
+        NodeBuilderFlagsMask = 277904747
     }
     export enum SymbolFormatFlags {
         None = 0,
@@ -3520,7 +3544,6 @@ declare module "typescript" {
         mergeId?: number;
         parent?: Symbol;
         exportSymbol?: Symbol;
-        nameType?: Type;
         constEnumOnlyModule?: boolean;
         isReferenced?: SymbolFlags;
         isReplaceableByMethod?: boolean;
@@ -3531,15 +3554,16 @@ declare module "typescript" {
         immediateTarget?: Symbol;
         target?: Symbol;
         type?: Type;
+        nameType?: Type;
         uniqueESSymbolType?: Type;
         declaredType?: Type;
-        resolvedJSDocType?: Type;
         typeParameters?: TypeParameter[];
         outerTypeParameters?: TypeParameter[];
         instantiations?: Map<Type>;
         inferredClassSymbol?: Map<TransientSymbol>;
         mapper?: TypeMapper;
         referenced?: boolean;
+        constEnumReferenced?: boolean;
         containingType?: UnionOrIntersectionType;
         leftSpread?: Symbol;
         rightSpread?: Symbol;
@@ -3562,6 +3586,7 @@ declare module "typescript" {
         deferralConstituents?: Type[];
         deferralParent?: Type;
         cjsExportMerged?: Symbol;
+        typeOnlyDeclaration?: TypeOnlyCompatibleAliasDeclaration | false;
     }
     export enum EnumKind {
         Numeric = 0,
@@ -3692,6 +3717,7 @@ declare module "typescript" {
         jsxFlags: JsxFlags;
         resolvedJsxElementAttributesType?: Type;
         resolvedJsxElementAllAttributesType?: Type;
+        resolvedJSDocType?: Type;
         hasSuperCall?: boolean;
         superCall?: SuperCall;
         switchTypes?: Type[];
@@ -3702,6 +3728,7 @@ declare module "typescript" {
         outerTypeParameters?: TypeParameter[];
         instantiations?: Map<Type>;
         isExhaustive?: boolean;
+        skipDirectInference?: true;
     }
     export enum TypeFlags {
         Any = 1,
@@ -4282,7 +4309,7 @@ declare module "typescript" {
         generateCpuProfile?: string;
         help?: boolean;
         importHelpers?: boolean;
-        importsNotUsedAsValues?: importsNotUsedAsValues;
+        importsNotUsedAsValues?: ImportsNotUsedAsValues;
         init?: boolean;
         inlineSourceMap?: boolean;
         inlineSources?: boolean;
@@ -4393,7 +4420,7 @@ declare module "typescript" {
         React = 2,
         ReactNative = 3
     }
-    export enum importsNotUsedAsValues {
+    export enum ImportsNotUsedAsValues {
         Remove = 0,
         Preserve = 1,
         Error = 2
@@ -4942,7 +4969,8 @@ declare module "typescript" {
         IdentifierName = 2,
         MappedTypeParameter = 3,
         Unspecified = 4,
-        EmbeddedStatement = 5
+        EmbeddedStatement = 5,
+        JsxAttributeValue = 6
     }
     export interface SourceFileMayBeEmittedHost {
         getCompilerOptions(): CompilerOptions;
@@ -5046,6 +5074,12 @@ declare module "typescript" {
          * @param emitCallback A callback used to emit the node.
          */
         emitNodeWithNotification(hint: EmitHint, node: Node, emitCallback: (hint: EmitHint, node: Node) => void): void;
+        /**
+         * Indicates if a given node needs an emit notification
+         *
+         * @param node The node to emit.
+         */
+        isEmitNotificationEnabled?(node: Node): boolean;
         /**
          * Clean up EmitNode entries on any parse-tree nodes.
          */
@@ -5193,6 +5227,11 @@ declare module "typescript" {
          * ```
          */
         onEmitNode?(hint: EmitHint, node: Node | undefined, emitCallback: (hint: EmitHint, node: Node | undefined) => void): void;
+        /**
+         * A hook used to check if an emit notification is required for a node.
+         * @param node The node to emit.
+         */
+        isEmitNotificationEnabled?(node: Node | undefined): boolean;
         /**
          * A hook used by the Printer to perform just-in-time substitution of a node. This is
          * primarily used by node transformations that need to substitute one node for another,
@@ -6408,7 +6447,7 @@ declare module "typescript" {
         Keywords_cannot_contain_escape_characters: DiagnosticMessage;
         Already_included_file_name_0_differs_from_file_name_1_only_in_casing: DiagnosticMessage;
         with_statements_are_not_allowed_in_an_async_function_block: DiagnosticMessage;
-        await_expression_is_only_allowed_within_an_async_function: DiagnosticMessage;
+        await_expressions_are_only_allowed_within_async_functions_and_at_the_top_levels_of_modules: DiagnosticMessage;
         can_only_be_used_in_an_object_literal_property_inside_a_destructuring_assignment: DiagnosticMessage;
         The_body_of_an_if_statement_cannot_be_the_empty_statement: DiagnosticMessage;
         Global_module_exports_may_only_appear_in_module_files: DiagnosticMessage;
@@ -6457,8 +6496,8 @@ declare module "typescript" {
         Tagged_template_expressions_are_not_permitted_in_an_optional_chain: DiagnosticMessage;
         Identifier_expected_0_is_a_reserved_word_that_cannot_be_used_here: DiagnosticMessage;
         Did_you_mean_to_parenthesize_this_function_type: DiagnosticMessage;
-        Type_only_0_must_reference_a_type_but_1_is_a_value: DiagnosticMessage;
-        Enum_0_cannot_be_used_as_a_value_because_only_its_type_has_been_imported: DiagnosticMessage;
+        _0_cannot_be_used_as_a_value_because_it_was_imported_using_import_type: DiagnosticMessage;
+        _0_cannot_be_used_as_a_value_because_it_was_exported_using_export_type: DiagnosticMessage;
         A_type_only_import_can_specify_a_default_import_or_named_bindings_but_not_both: DiagnosticMessage;
         Convert_to_type_only_export: DiagnosticMessage;
         Convert_all_re_exported_types_to_type_only_exports: DiagnosticMessage;
@@ -6468,10 +6507,14 @@ declare module "typescript" {
         Did_you_mean_0: DiagnosticMessage;
         Only_ECMAScript_imports_may_use_import_type: DiagnosticMessage;
         This_import_is_never_used_as_a_value_and_must_use_import_type_because_the_importsNotUsedAsValues_is_set_to_error: DiagnosticMessage;
-        This_import_may_be_converted_to_a_type_only_import: DiagnosticMessage;
         Convert_to_type_only_import: DiagnosticMessage;
         Convert_all_imports_not_used_as_a_value_to_type_only_imports: DiagnosticMessage;
-        await_outside_of_an_async_function_is_only_allowed_at_the_top_level_of_a_module_when_module_is_esnext_or_system_and_target_is_es2017_or_higher: DiagnosticMessage;
+        await_expressions_are_only_allowed_at_the_top_level_of_a_file_when_that_file_is_a_module_but_this_file_has_no_imports_or_exports_Consider_adding_an_empty_export_to_make_this_file_a_module: DiagnosticMessage;
+        _0_was_imported_here: DiagnosticMessage;
+        _0_was_exported_here: DiagnosticMessage;
+        Top_level_await_expressions_are_only_allowed_when_the_module_option_is_set_to_esnext_or_system_and_the_target_option_is_set_to_es2017_or_higher: DiagnosticMessage;
+        An_import_alias_cannot_reference_a_declaration_that_was_exported_using_export_type: DiagnosticMessage;
+        An_import_alias_cannot_reference_a_declaration_that_was_imported_using_import_type: DiagnosticMessage;
         The_types_of_0_are_incompatible_between_these_types: DiagnosticMessage;
         The_types_returned_by_0_are_incompatible_between_these_types: DiagnosticMessage;
         Call_signature_return_types_0_and_1_are_incompatible: DiagnosticMessage;
@@ -6632,6 +6675,8 @@ declare module "typescript" {
         Type_alias_0_circularly_references_itself: DiagnosticMessage;
         Type_alias_name_cannot_be_0: DiagnosticMessage;
         An_AMD_module_cannot_have_multiple_name_assignments: DiagnosticMessage;
+        Module_0_declares_1_locally_but_it_is_not_exported: DiagnosticMessage;
+        Module_0_declares_1_locally_but_it_is_exported_as_2: DiagnosticMessage;
         Type_0_is_not_an_array_type: DiagnosticMessage;
         A_rest_element_must_be_last_in_a_destructuring_pattern: DiagnosticMessage;
         A_binding_pattern_parameter_cannot_be_optional_in_an_implementation_signature: DiagnosticMessage;
@@ -7417,7 +7462,7 @@ declare module "typescript" {
         Add_missing_super_call: DiagnosticMessage;
         Make_super_call_the_first_statement_in_the_constructor: DiagnosticMessage;
         Change_extends_to_implements: DiagnosticMessage;
-        Remove_declaration_for_Colon_0: DiagnosticMessage;
+        Remove_unused_declaration_for_Colon_0: DiagnosticMessage;
         Remove_import_from_0: DiagnosticMessage;
         Implement_interface_0: DiagnosticMessage;
         Implement_inherited_abstract_class: DiagnosticMessage;
@@ -7448,6 +7493,7 @@ declare module "typescript" {
         Import_default_0_from_module_1: DiagnosticMessage;
         Add_default_import_0_to_existing_import_declaration_from_1: DiagnosticMessage;
         Add_parameter_name: DiagnosticMessage;
+        Declare_a_private_field_named_0: DiagnosticMessage;
         Convert_function_to_an_ES2015_class: DiagnosticMessage;
         Convert_function_0_to_class: DiagnosticMessage;
         Extract_to_0_in_1: DiagnosticMessage;
@@ -7540,10 +7586,12 @@ declare module "typescript" {
         Prefix_with_declare: DiagnosticMessage;
         Prefix_all_incorrect_property_declarations_with_declare: DiagnosticMessage;
         Convert_to_template_string: DiagnosticMessage;
+        Add_export_to_make_this_file_into_a_module: DiagnosticMessage;
+        Set_the_target_option_in_your_configuration_file_to_0: DiagnosticMessage;
+        Set_the_module_option_in_your_configuration_file_to_0: DiagnosticMessage;
         No_value_exists_in_scope_for_the_shorthand_property_0_Either_declare_one_or_provide_an_initializer: DiagnosticMessage;
         Classes_may_not_have_a_field_named_constructor: DiagnosticMessage;
         JSX_expressions_may_not_use_the_comma_operator_Did_you_mean_to_write_an_array: DiagnosticMessage;
-        can_only_be_used_at_the_start_of_a_file: DiagnosticMessage;
         Private_identifiers_cannot_be_used_as_parameters: DiagnosticMessage;
         An_accessibility_modifier_cannot_be_used_with_a_private_identifier: DiagnosticMessage;
         The_operand_of_a_delete_operator_cannot_be_a_private_identifier: DiagnosticMessage;
@@ -7558,6 +7606,7 @@ declare module "typescript" {
         A_method_cannot_be_named_with_a_private_identifier: DiagnosticMessage;
         An_accessor_cannot_be_named_with_a_private_identifier: DiagnosticMessage;
         An_enum_member_cannot_be_named_with_a_private_identifier: DiagnosticMessage;
+        can_only_be_used_at_the_start_of_a_file: DiagnosticMessage;
         Compiler_reserves_name_0_when_emitting_private_identifier_downlevel: DiagnosticMessage;
         Private_identifiers_are_only_available_when_targeting_ECMAScript_2015_and_higher: DiagnosticMessage;
         Private_identifiers_are_not_allowed_in_variable_declarations: DiagnosticMessage;
@@ -8044,7 +8093,7 @@ declare module "typescript" {
     function isTemplateLiteralToken(node: Node): node is TemplateLiteralToken;
     function isTemplateMiddleOrTemplateTail(node: Node): node is TemplateMiddle | TemplateTail;
     function isImportOrExportSpecifier(node: Node): node is ImportSpecifier | ExportSpecifier;
-    function isTypeOnlyImportOrExportName(node: Node): boolean;
+    function isTypeOnlyImportOrExportDeclaration(node: Node): node is TypeOnlyCompatibleAliasDeclaration;
     function isStringTextContainingNode(node: Node): node is StringLiteral | TemplateLiteralToken;
     function isGeneratedIdentifier(node: Node): node is GeneratedIdentifier;
     function isPrivateIdentifierPropertyDeclaration(node: Node): node is PrivateIdentifierPropertyDeclaration;
@@ -8172,10 +8221,6 @@ declare module "typescript" {
     function hasEntries(map: ReadonlyUnderscoreEscapedMap<any> | undefined): map is ReadonlyUnderscoreEscapedMap<any>;
     function createSymbolTable(symbols?: readonly Symbol[]): SymbolTable;
     function isTransientSymbol(symbol: Symbol): symbol is TransientSymbol;
-    function isTypeOnlyAlias(symbol: Symbol): symbol is TransientSymbol & {
-        immediateTarget: Symbol;
-    };
-    function isTypeOnlyEnumAlias(symbol: Symbol): ReturnType<typeof isTypeOnlyAlias>;
     function changesAffectModuleResolution(oldOptions: CompilerOptions, newOptions: CompilerOptions): boolean;
     function optionsHaveModuleResolutionChanges(oldOptions: CompilerOptions, newOptions: CompilerOptions): boolean;
     /**
@@ -8265,7 +8310,7 @@ declare module "typescript" {
      * Gets flags that control emit behavior of a node.
      */
     function getEmitFlags(node: Node): EmitFlags;
-    function getLiteralText(node: LiteralLikeNode, sourceFile: SourceFile, neverAsciiEscape: boolean | undefined): string;
+    function getLiteralText(node: LiteralLikeNode, sourceFile: SourceFile, neverAsciiEscape: boolean | undefined, jsxAttributeEscape: boolean): string;
     function getTextOfConstantValue(value: string | number): string;
     function makeIdentifierFromModuleName(moduleName: string): string;
     function isBlockOrCatchScoped(declaration: Declaration): boolean;
@@ -8393,6 +8438,7 @@ declare module "typescript" {
     function isJSXTagName(node: Node): boolean;
     function isExpressionNode(node: Node): boolean;
     function isInExpressionContext(node: Node): boolean;
+    function isPartOfTypeQuery(node: Node): boolean;
     function isExternalModuleImportEqualsDeclaration(node: Node): node is ImportEqualsDeclaration & {
         moduleReference: ExternalModuleReference;
     };
@@ -8476,6 +8522,7 @@ declare module "typescript" {
     function getExternalModuleName(node: AnyImportOrReExport | ImportTypeNode): Expression | undefined;
     function getNamespaceDeclarationNode(node: ImportDeclaration | ImportEqualsDeclaration | ExportDeclaration): ImportEqualsDeclaration | NamespaceImport | NamespaceExport | undefined;
     function isDefaultImport(node: ImportDeclaration | ImportEqualsDeclaration | ExportDeclaration): boolean;
+    function forEachImportClauseDeclaration<T>(node: ImportClause, action: (declaration: ImportClause | NamespaceImport | ImportSpecifier) => T | undefined): T | undefined;
     function hasQuestionToken(node: Node): boolean;
     function isJSDocConstructSignature(node: Node): boolean;
     function isJSDocTypeAlias(node: Node): node is JSDocTypedefTag | JSDocCallbackTag | JSDocEnumTag;
@@ -8519,6 +8566,8 @@ declare module "typescript" {
     function isLiteralComputedPropertyDeclarationName(node: Node): boolean;
     function isIdentifierName(node: Identifier): boolean;
     function isAliasSymbolDeclaration(node: Node): boolean;
+    function getAliasDeclarationFromName(node: EntityName): Declaration | undefined;
+    function isAliasableExpression(e: Expression): boolean;
     function exportAssignmentIsAlias(node: ExportAssignment | BinaryExpression): boolean;
     function getExportAssignmentExpression(node: ExportAssignment | BinaryExpression): Expression;
     function getPropertyAssignmentAliasLikeExpression(node: PropertyAssignment | ShorthandPropertyAssignment | PropertyAccessExpression): Expression;
@@ -8607,6 +8656,8 @@ declare module "typescript" {
      * Note that this doesn't actually wrap the input in double quotes.
      */
     function escapeString(s: string, quoteChar?: CharacterCodes.doubleQuote | CharacterCodes.singleQuote | CharacterCodes.backtick): string;
+    function escapeNonAsciiString(s: string, quoteChar?: CharacterCodes.doubleQuote | CharacterCodes.singleQuote | CharacterCodes.backtick): string;
+    function escapeJsxAttributeString(s: string, quoteChar?: CharacterCodes.doubleQuote | CharacterCodes.singleQuote): string;
     /**
      * Strip off existed surrounding single quotes, double quotes, or backticks from a given string
      *
@@ -8614,7 +8665,6 @@ declare module "typescript" {
      */
     function stripQuotes(name: string): string;
     function isIntrinsicJsxName(name: __String | string): boolean;
-    function escapeNonAsciiString(s: string, quoteChar?: CharacterCodes.doubleQuote | CharacterCodes.singleQuote | CharacterCodes.backtick): string;
     function getIndentString(level: number): string;
     function getIndentSize(): number;
     function createTextWriter(newLine: string): EmitTextWriter;
@@ -9046,6 +9096,7 @@ declare module "typescript" {
      */
     function parsePseudoBigInt(stringValue: string): string;
     function pseudoBigIntToString({ negative, base10Value }: PseudoBigInt): string;
+    function isValidTypeOnlyAliasUseSite(useSite: Node): boolean;
 }
 declare module "typescript" {
     function createNode(kind: SyntaxKind, pos?: number, end?: number): Node;
@@ -11274,7 +11325,7 @@ declare module "typescript" {
         getCurrentProgram(): Program | undefined;
         fileIsOpen(filePath: Path): boolean;
     }
-    export function isPathIgnored(path: Path): boolean;
+    export function removeIgnoredPath(path: Path): Path | undefined;
     /**
      * Filter out paths like
      * "/", "/user", "/user/username", "/user/username/folderAtRoot",
@@ -12231,7 +12282,7 @@ declare module "typescript" {
         fileName: string;
     }
     type OrganizeImportsScope = CombinedCodeFixScope;
-    type CompletionsTriggerCharacter = "." | "\"" | "'" | "`" | "/" | "@" | "<";
+    type CompletionsTriggerCharacter = "." | "\"" | "'" | "`" | "/" | "@" | "<" | "#";
     interface GetCompletionsAtPositionOptions extends UserPreferences {
         /**
          * If the editor is asking for completions because a certain character was typed
@@ -12704,6 +12755,7 @@ declare module "typescript" {
         hasAction?: true;
         source?: string;
         isRecommended?: true;
+        isFromUncheckedFile?: true;
     }
     interface CompletionEntryDetails {
         name: string;
@@ -13046,6 +13098,15 @@ declare module "typescript" {
     function findChildOfKind<T extends Node>(n: Node, kind: T["kind"], sourceFile: SourceFileLike): T | undefined;
     function findContainingList(node: Node): SyntaxList | undefined;
     /**
+     * Adjusts the location used for "find references" and "go to definition" when the cursor was not
+     * on a property name.
+     */
+    function getAdjustedReferenceLocation(node: Node): Node;
+    /**
+     * Adjusts the location used for "rename" when the cursor was not on a property name.
+     */
+    function getAdjustedRenameLocation(node: Node): Node;
+    /**
      * Gets the token whose text has range [start, end) and
      * position >= start and (position < end or (position === end && token is literal or keyword or identifier))
      */
@@ -13118,6 +13179,7 @@ declare module "typescript" {
     function createTextChange(span: TextSpan, newText: string): TextChange;
     const typeKeywords: readonly SyntaxKind[];
     function isTypeKeyword(kind: SyntaxKind): boolean;
+    function isTypeKeywordToken(node: Node): node is Token<SyntaxKind.TypeKeyword>;
     /** True if the symbol is for an external module, as opposed to a namespace. */
     function isExternalModuleSymbol(moduleSymbol: Symbol): boolean;
     /** Returns `true` the first time it encounters a node and `false` afterwards. */
@@ -13164,7 +13226,8 @@ declare module "typescript" {
     function isMemberSymbolInBaseType(memberSymbol: Symbol, checker: TypeChecker): boolean;
     function getParentNodeInSpan(node: Node | undefined, file: SourceFile, span: TextSpan): Node | undefined;
     function findModifier(node: Node, kind: Modifier["kind"]): Modifier | undefined;
-    function insertImport(changes: textChanges.ChangeTracker, sourceFile: SourceFile, importDecl: Statement): void;
+    function insertImport(changes: textChanges.ChangeTracker, sourceFile: SourceFile, importDecl: Statement, blankLineBetween: boolean): void;
+    function getTypeKeywordOfTypeOnlyImport(importClause: ImportClause, sourceFile: SourceFile): Token<SyntaxKind.TypeKeyword>;
     function textSpansEqual(a: TextSpan | undefined, b: TextSpan | undefined): boolean;
     function documentSpansEqual(a: DocumentSpan, b: DocumentSpan): boolean;
     /**
@@ -13565,14 +13628,26 @@ declare module "typescript" {
         function toContextSpan(textSpan: TextSpan, sourceFile: SourceFile, context?: ContextNode): {
             contextSpan: TextSpan;
         } | undefined;
+        enum FindReferencesUse {
+            /**
+             * When searching for references to a symbol, the location will not be adjusted (this is the default behavior when not specified).
+             */
+            Other = 0,
+            /**
+             * When searching for references to a symbol, the location will be adjusted if the cursor was on a keyword.
+             */
+            References = 1,
+            /**
+             * When searching for references to a symbol, the location will be adjusted if the cursor was on a keyword.
+             * Unlike `References`, the location will only be adjusted keyword belonged to a declaration with a valid name.
+             * If set, we will find fewer references -- if it is referenced by several different names, we still only find references for the original name.
+             */
+            Rename = 2
+        }
         interface Options {
             readonly findInStrings?: boolean;
             readonly findInComments?: boolean;
-            /**
-             * True if we are renaming the symbol.
-             * If so, we will find fewer references -- if it is referenced by several different names, we still only find references for the original name.
-             */
-            readonly isForRename?: boolean;
+            readonly use?: FindReferencesUse;
             /** True if we are searching for implementations. We will have a different method of adding references if so. */
             readonly implementations?: boolean;
             /**
@@ -14153,7 +14228,13 @@ declare module "typescript" {
             insertNodeAtClassStart(sourceFile: SourceFile, cls: ClassLikeDeclaration | InterfaceDeclaration, newElement: ClassElement): void;
             insertNodeAtObjectStart(sourceFile: SourceFile, obj: ObjectLiteralExpression, newElement: ObjectLiteralElementLike): void;
             private insertNodeAtStartWorker;
-            private getInsertNodeAtStartPrefixSuffix;
+            /**
+             * Tries to guess the indentation from the existing members of a class/interface/object. All members must be on
+             * new lines and must share the same indentation.
+             */
+            private guessIndentationFromExistingMembers;
+            private computeIndentationForNewMember;
+            private getInsertNodeAtStartInsertOptions;
             insertNodeAfterComma(sourceFile: SourceFile, after: Node, newNode: Node): void;
             insertNodeAfter(sourceFile: SourceFile, after: Node, newNode: Node): void;
             insertNodeAtEndOfList(sourceFile: SourceFile, list: NodeArray<Node>, newNode: Node): void;
@@ -14192,7 +14273,7 @@ declare module "typescript" {
 declare module "typescript" {
     namespace codefix {
         type DiagnosticAndArguments = DiagnosticMessage | [DiagnosticMessage, string] | [DiagnosticMessage, string, string];
-        function createCodeFixActionNoFixId(fixName: string, changes: FileTextChanges[], description: DiagnosticAndArguments): CodeFixAction;
+        function createCodeFixActionWithoutFixAll(fixName: string, changes: FileTextChanges[], description: DiagnosticAndArguments): CodeFixAction;
         function createCodeFixAction(fixName: string, changes: FileTextChanges[], description: DiagnosticAndArguments, fixId: {}, fixAllDescription: DiagnosticAndArguments, command?: CodeActionCommand): CodeFixAction;
         function registerCodeFix(reg: CodeFixRegistration): void;
         function getSupportedErrorCodes(): string[];
@@ -14201,7 +14282,7 @@ declare module "typescript" {
         function createCombinedCodeActions(changes: FileTextChanges[], commands?: CodeActionCommand[]): CombinedCodeActions;
         function createFileTextChanges(fileName: string, textChanges: TextChange[]): FileTextChanges;
         function codeFixAll(context: CodeFixAllContext, errorCodes: number[], use: (changes: textChanges.ChangeTracker, error: DiagnosticWithLocation, commands: Push<CodeActionCommand>) => void): CombinedCodeActions;
-        function eachDiagnostic({ program, sourceFile, cancellationToken }: CodeFixAllContext, errorCodes: readonly number[], cb: (diag: DiagnosticWithLocation) => void): void;
+        function eachDiagnostic(context: CodeFixAllContext, errorCodes: readonly number[], cb: (diag: DiagnosticWithLocation) => void): void;
     }
 }
 declare module "typescript" {
@@ -14210,6 +14291,10 @@ declare module "typescript" {
         function registerRefactor(name: string, refactor: Refactor): void;
         function getApplicableRefactors(context: RefactorContext): ApplicableRefactorInfo[];
         function getEditsForRefactor(context: RefactorContext, refactorName: string, actionName: string): RefactorEditInfo | undefined;
+    }
+}
+declare module "typescript" {
+    namespace codefix {
     }
 }
 declare module "typescript" {
@@ -14272,7 +14357,7 @@ declare module "typescript" {
 }
 declare module "typescript" {
     namespace codefix {
-        const importFixId = "fixMissingImport";
+        const importFixName = "import";
         enum ImportKind {
             Named = 0,
             Default = 1,
@@ -14359,6 +14444,10 @@ declare module "typescript" {
 }
 declare module "typescript" {
     namespace codefix {
+    }
+}
+declare module "typescript" {
+    namespace codefix {
         /**
          * Finds members of the resolved type that are missing in the class pointed to by class decl
          * and generates source code for the missing members.
@@ -14372,7 +14461,8 @@ declare module "typescript" {
             host: ModuleSpecifierResolutionHost;
         }
         function createMethodFromCallExpression(context: CodeFixContextBase, call: CallExpression, methodName: string, inJs: boolean, makeStatic: boolean, preferences: UserPreferences, contextNode: Node): MethodDeclaration;
-        function setJsonCompilerOptionValue(changeTracker: textChanges.ChangeTracker, configFile: TsConfigSourceFile, optionName: string, optionValue: Expression): undefined;
+        function setJsonCompilerOptionValues(changeTracker: textChanges.ChangeTracker, configFile: TsConfigSourceFile, options: [string, Expression][]): undefined;
+        function setJsonCompilerOptionValue(changeTracker: textChanges.ChangeTracker, configFile: TsConfigSourceFile, optionName: string, optionValue: Expression): void;
         function createJsonPropertyAssignment(name: string, initializer: Expression): PropertyAssignment;
         function findJsonProperty(obj: ObjectLiteralExpression, name: string): PropertyAssignment | undefined;
     }

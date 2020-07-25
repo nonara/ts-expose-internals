@@ -146,6 +146,7 @@ function postBuild(versionTag: string) {
   replaceJsonInFile(path.join(destPath, 'package.json'), (pkg: any) => {
     pkg.version = fixVersion(versionTag);
     pkg.private = false;
+    delete pkg.scripts;
   });
 }
 

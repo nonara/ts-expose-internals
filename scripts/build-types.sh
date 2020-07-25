@@ -29,7 +29,7 @@ buildTypes() {
   cd "${ROOT_PATH}/TypeScript" || exit 1
 
   # Reset environment
-  git clean -xfd # deletes any untracted existing artifacts including node_modules
+  git clean -xfd # deletes any existing artifacts including node_modules
   git fetch origin
   git checkout --force "$version"
 
@@ -45,9 +45,11 @@ buildTypes() {
   printf "Building compiler ...\n\n"
   npm run build:compiler
 
+  # Clean output directory (leaves .npmrc)
+  rm -rf "${OUT_DIR:?}/*"
+
   # Copy output file
-  outFilePath="${OUT_DIR}/${version}/index.d.ts"
-  mkdir -p "$OUT_DIR/$version"
+  outFilePath="${OUT_DIR}/index.d.ts"
   cp ./built/local/typescriptServices.d.ts "$outFilePath"
 
   if [ ! -f "$outFilePath" ]
@@ -68,3 +70,6 @@ buildTypes() {
   printf "Finished building package for %s!\n\n" "$version"
   cd "$PWD" || exit 1
 }
+
+# Execute if manually invoked by itself
+[ -n "$1" ] && buildTypes "$1"

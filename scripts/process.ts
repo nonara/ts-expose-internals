@@ -125,7 +125,7 @@ function preBuild() {
 }
 
 function postBuild(versionTag: string) {
-  const destPath = path.join(outPath, versionTag);
+  const destPath = outPath;
   const definitionsFile = path.resolve(destPath, 'index.d.ts');
   if (!fs.existsSync(definitionsFile)) throw new Error(`Definitions file does not exist: ${definitionsFile}`);
 

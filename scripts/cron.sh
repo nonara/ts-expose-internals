@@ -9,6 +9,8 @@ set -e
 . "$(dirname "$(readlink -f "$0")")/config.sh"
 # shellcheck source=build-types.sh
 . "${SCRIPT_PATH}/build-types.sh"
+# shellcheck source=publish-git.sh
+. "${SCRIPT_PATH}/publish-git.sh"
 
 
 # #################################################################################################################### #
@@ -20,14 +22,14 @@ build() {
   TAG=$1
 
   # Build Types file
-  if [ ! -f "${OUT_DIR}/${TAG}/index.d.ts" ]
-  then
-    buildTypes "$TAG"
-    cd "$OUT_DIR" || exit 1
-    npm publish "./$TAG" --ignore-scripts --cache "${ROOT_PATH}/.cache"
-  else
-    printf "Already built %s\n" "$TAG"
-  fi
+  buildTypes "$TAG"
+
+  # Commit and push built types with tag for version
+  publishGit "$TAG"
+
+  # Publish to NPM
+  cd "$OUT_DIR" || exit 1
+  npm publish --ignore-scripts --cache "${ROOT_PATH}/.cache"
 }
 
 isIn() {

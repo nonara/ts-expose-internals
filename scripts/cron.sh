@@ -30,8 +30,6 @@ build() {
   # Publish to NPM
   cd "$OUT_DIR" || exit 1
   npm publish --ignore-scripts --cache "${ROOT_PATH}/.cache"
-
-  exit 0
 }
 
 isIn() {

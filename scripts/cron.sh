@@ -53,8 +53,9 @@ getTags() {
   [ -z "$1" ] && DIR="$ROOT_PATH" || DIR="$1"
 
   echo "$(
+    set -e
     cd "$DIR";
-    git fetch --all --tags -q;
+    git fetch --all --tags -q --force;
     git tag -l | awk -v test="$GIT_TAG_REGEX" '$1~test'
   )"
 }

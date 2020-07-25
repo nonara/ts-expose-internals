@@ -29,13 +29,13 @@ publishGit() {
   cd "${ROOT_PATH}" || exit 1
 
   # Commit files
-  echo git add -A
-  echo git commit -m "$version"
-  echo git push
+  git add -A
+  git commit -m "$version"
+  git push
 
   # Add tag
-  echo git tag "$version"
-  echo git push --tags
+  git tag "$version"
+  git push --tags
 
   cd "$PWD" || exit 1
 }

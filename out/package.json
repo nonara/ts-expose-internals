@@ -1,0 +1,38 @@
+{
+  "name": "ts-expose-internals",
+  "private": false,
+  "description": "Augment the TypeScript compiler module's types to expose hidden internal types",
+  "version": "3.8.0-beta",
+  "license": "MIT",
+  "types": "index.d.ts",
+  "scripts": {
+    "clean": "rm -rf out TypeScript node_modules .cache && echo Cleaned environment. Remember to re-initialize by running npm install",
+    "prepare": "sh scripts/prepare.sh"
+  },
+  "author": {
+    "name": "Ron S.",
+    "email": "ron@crosstype.org"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:nonara/ts-expose-internals.git"
+  },
+  "files": [
+    "index.d.ts"
+  ],
+  "keywords": [
+    "typescript",
+    "internal types",
+    "internals",
+    "byots",
+    "types"
+  ],
+  "engines": {
+    "node": ">=10.x"
+  },
+  "devDependencies": {
+    "@types/node": "^14.0.25",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.7"
+  }
+}

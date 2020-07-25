@@ -24,7 +24,7 @@ build() {
   then
     buildTypes "$TAG"
     cd "$OUT_DIR" || exit 1
-    npm publish "./$TAG"
+    npm publish "./$TAG" --ignore-scripts --cache "${ROOT_PATH}/.cache"
   else
     printf "Already built %s\n" "$TAG"
   fi

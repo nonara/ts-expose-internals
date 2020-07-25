@@ -35,7 +35,7 @@ buildTypes() {
 
   # Install dependencies
   printf "Installing dependencies ...\n\n"
-  npm install
+  npm install --cache "${ROOT_PATH}/.cache"
 
   # Prepare code
   print "Pre-processing code ...\n\n"

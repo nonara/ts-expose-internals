@@ -1,4 +1,3 @@
-[![Used By](https://img.shields.io/sourcegraph/rrc/github.com/nonara/ts-expose-internals)](https://www.npmjs.com/package/ts-expose-internals)
 [![License](https://img.shields.io/npm/l/ts-expose-internals)](https://opensource.org/licenses/MIT)
 
 # TypeScript Internal Types

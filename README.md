@@ -8,18 +8,22 @@ Expose TypeScript internal types by simply adding a development dependency.
 
 1. Add dependency to package.json (set version to the same as your typescript version)
 
-        {
-          "devDependencies": {
-            "typescript": "^3.9.6",
-            "ts-expose-internals": "^3.9.6"
-          }
-        }
+   ```jsonc
+   {
+     "devDependencies": {
+       "typescript": "^3.9.6",
+       "ts-expose-internals": "^3.9.6"
+     }
+   }
+   ```
 
 2. Run `npm install` (for yarn: `yarn install`)
 
-3. Import the package once in your main index.ts
+3. Add import line to your main index.ts
 
-        import 'ts-expose-internals'
+   ```ts 
+   import * as tsei from 'ts-expose-internals'
+   ```
 
     _Note:_
     

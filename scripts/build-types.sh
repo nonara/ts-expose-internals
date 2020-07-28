@@ -49,7 +49,7 @@ buildTypes() {
   rm -rf "${OUT_DIR:?}/*"
 
   # Copy output file
-  outFilePath="${OUT_DIR}/index.d.ts"
+  outFilePath="${OUT_DIR}/typescript.d.ts"
   cp ./built/local/typescriptServices.d.ts "$outFilePath"
 
   if [ ! -f "$outFilePath" ]

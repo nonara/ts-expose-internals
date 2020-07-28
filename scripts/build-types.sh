@@ -46,10 +46,10 @@ buildTypes() {
   npm run build:compiler
 
   # Clean output directory (leaves .npmrc)
-  rm -rf "${OUT_DIR:?}/*"
+  rm -rf "${OUT_DIR:?}"/*
 
   # Copy output file
-  outFilePath="${OUT_DIR}/index.d.ts"
+  outFilePath="${OUT_DIR}/typescript.d.ts"
   cp ./built/local/typescriptServices.d.ts "$outFilePath"
 
   if [ ! -f "$outFilePath" ]
@@ -65,7 +65,7 @@ buildTypes() {
   # Type-Check generated file
   printf "Checking types ...\n\n"
   cd "$ROOT_PATH" || exit 1
-  ./node_modules/typescript/bin/tsc "$outFilePath"
+  ./node_modules/typescript/bin/tsc "$outFilePath" index.d.ts
 
   printf "Finished building package for %s!\n\n" "$version"
   cd "$PWD" || exit 1

@@ -15,6 +15,12 @@ const baseDir = path.resolve(__dirname, '..')
 const tsDir = path.join(baseDir, 'TypeScript');
 const outPath = path.join(baseDir, 'out');
 
+const indexDtsSrc = `
+import './typescript'
+declare namespace nothing {}
+export = nothing
+`;
+
 const manualExports: Record</* filePath */ string, /* Lines */ string[]> = {
   './services/refactors/extractSymbol.ts': [
     'const enum Usage',
@@ -126,7 +132,7 @@ function preBuild() {
 
 function postBuild(versionTag: string) {
   const destPath = outPath;
-  const definitionsFile = path.resolve(destPath, 'index.d.ts');
+  const definitionsFile = path.resolve(destPath, 'typescript.d.ts');
   if (!fs.existsSync(definitionsFile)) throw new Error(`Definitions file does not exist: ${definitionsFile}`);
 
   let data = fs.readFileSync(definitionsFile, 'utf8');
@@ -149,6 +155,9 @@ function postBuild(versionTag: string) {
     delete pkg.scripts;
     delete pkg.engines;
   });
+
+  /* Write index.d.ts */
+  fs.writeFileSync(path.join(destPath, 'index.d.ts'), indexDtsSrc);
 
   /* Copy README.md */
   fs.copyFileSync(path.join(baseDir, 'README.md'), path.join(destPath, 'README.md'));

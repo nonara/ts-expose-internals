@@ -18,7 +18,9 @@
     "url": "git@github.com:nonara/ts-expose-internals.git"
   },
   "files": [
-    "index.d.ts"
+    "index.d.ts",
+    "README.md",
+    "typescript.d.ts"
   ],
   "keywords": [
     "typescript",

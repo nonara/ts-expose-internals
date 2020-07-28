@@ -11,6 +11,8 @@ set -e
 . "${SCRIPT_PATH}/build-types.sh"
 # shellcheck source=publish-git.sh
 . "${SCRIPT_PATH}/publish-git.sh"
+# shellcheck source=publish-npm.sh
+. "${SCRIPT_PATH}/publish-npm.sh"
 
 
 # #################################################################################################################### #
@@ -28,8 +30,7 @@ build() {
   publishGit "$TAG"
 
   # Publish to NPM
-  cd "$OUT_DIR" || exit 1
-  npm publish --ignore-scripts --cache "${ROOT_PATH}/.cache"
+  publishNpm "$TAG"
 }
 
 isIn() {

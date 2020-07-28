@@ -157,7 +157,7 @@ function postBuild(versionTag: string) {
   });
 
   /* Write index.d.ts */
-  fs.writeFileSync(path.join(baseDir, 'index.d.ts'), indexDtsSrc);
+  fs.writeFileSync(path.join(destPath, 'index.d.ts'), indexDtsSrc);
 
   /* Copy README.md */
   fs.copyFileSync(path.join(baseDir, 'README.md'), path.join(destPath, 'README.md'));

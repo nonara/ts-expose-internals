@@ -46,7 +46,7 @@ buildTypes() {
   npm run build:compiler
 
   # Clean output directory (leaves .npmrc)
-  rm -rf "${OUT_DIR:?}/*"
+  rm -rf "${OUT_DIR:?}"/*
 
   # Copy output file
   outFilePath="${OUT_DIR}/typescript.d.ts"

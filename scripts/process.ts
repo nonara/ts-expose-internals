@@ -15,11 +15,7 @@ const baseDir = path.resolve(__dirname, '..')
 const tsDir = path.join(baseDir, 'TypeScript');
 const outPath = path.join(baseDir, 'out');
 
-const indexDtsSrc = `
-import './typescript'
-declare namespace nothing {}
-export = nothing
-`;
+const indexDtsSrc = `import './typescript'; export {}`;
 
 const manualExports: Record</* filePath */ string, /* Lines */ string[]> = {
   './services/refactors/extractSymbol.ts': [

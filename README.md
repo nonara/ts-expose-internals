@@ -19,16 +19,18 @@ Expose TypeScript internal types by simply adding a development dependency.
 
 2. Run `npm install` (for yarn: `yarn install`)
 
-3. Add import line to your main index.ts
+3. Add the following line to your main index.ts
 
    ```ts 
-   import * as tsei from 'ts-expose-internals'
+   import {} from 'ts-expose-internals'
    ```
 
-    _Note:_
+    _Notes:_
     
-    _You can add this import line in any `.ts` file that is included in your project.  
-    It only needs to be added to one file in the project for the types to be recognized._
+    - This line only needs to be added to one source file (it doesn't have to be main index), and the types will be 
+      recognized project-wide
+    - This line will not be output in compiled source as long as you include `{} from`
+    - You might need to tell your linter to ignore this line if it's set to flag empty imports
 
 ## Usage
 All internal types are now available within the primary typescript module

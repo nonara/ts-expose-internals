@@ -29,8 +29,8 @@ Expose TypeScript internal types by simply adding a development dependency.
     
     - This line only needs to be added to one source file (it doesn't have to be main index), and the types will be 
       recognized project-wide
-    - This line will not be output in compiled source as long as you include `{} from`
-    - You might need to tell your linter to ignore this line if it's set to flag empty imports
+    - We include the empty `{} from` in order to make sure it does not get output in compiled source
+    - You might need to tell your linter to ignore the import line if it's set to flag empty imports
 
 ## Usage
 All internal types are now available within the primary typescript module

@@ -65,7 +65,7 @@ buildTypes() {
   # Type-Check generated file
   printf "Checking types ...\n\n"
   cd "$ROOT_PATH" || exit 1
-  ./node_modules/typescript/bin/tsc "$outFilePath" index.d.ts
+  ./node_modules/typescript/bin/tsc "$outFilePath" "${OUT_DIR}/index.d.ts"
 
   printf "Finished building package for %s!\n\n" "$version"
   cd "$PWD" || exit 1

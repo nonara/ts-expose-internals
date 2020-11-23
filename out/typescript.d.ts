@@ -4856,7 +4856,6 @@ declare module "typescript" {
         baseUrl?: string;
         /** An error if set - this should only go through the -b pipeline and not actually be observed */
         build?: boolean;
-        bundledPackageName?: string;
         charset?: string;
         checkJs?: boolean;
         configFilePath?: string;
@@ -6599,7 +6598,6 @@ declare module "typescript" {
         readonly redirectTargetsMap: RedirectTargetsMap;
         getProjectReferenceRedirect(fileName: string): string | undefined;
         isSourceOfProjectReferenceRedirect(fileName: string): boolean;
-        getCompilerOptions(): CompilerOptions;
     }
     export interface SymbolTracker {
         trackSymbol?(symbol: Symbol, enclosingDeclaration: Node | undefined, meaning: SymbolFlags): void;
@@ -7834,8 +7832,6 @@ declare module "typescript" {
         Function_type_notation_must_be_parenthesized_when_used_in_an_intersection_type: DiagnosticMessage;
         Constructor_type_notation_must_be_parenthesized_when_used_in_an_intersection_type: DiagnosticMessage;
         _0_is_not_allowed_as_a_variable_declaration_name: DiagnosticMessage;
-        Provides_a_root_package_name_when_using_outFile_with_declarations: DiagnosticMessage;
-        The_bundledPackageName_option_must_be_provided_when_using_outFile_and_node_module_resolution_with_declaration_emit: DiagnosticMessage;
         The_types_of_0_are_incompatible_between_these_types: DiagnosticMessage;
         The_types_returned_by_0_are_incompatible_between_these_types: DiagnosticMessage;
         Call_signature_return_types_0_and_1_are_incompatible: DiagnosticMessage;
@@ -9652,6 +9648,7 @@ declare module "typescript" {
     export function createDiagnosticForNodeArray(sourceFile: SourceFile, nodes: NodeArray<Node>, message: DiagnosticMessage, arg0?: string | number, arg1?: string | number, arg2?: string | number, arg3?: string | number): DiagnosticWithLocation;
     export function createDiagnosticForNodeInSourceFile(sourceFile: SourceFile, node: Node, message: DiagnosticMessage, arg0?: string | number, arg1?: string | number, arg2?: string | number, arg3?: string | number): DiagnosticWithLocation;
     export function createDiagnosticForNodeFromMessageChain(node: Node, messageChain: DiagnosticMessageChain, relatedInformation?: DiagnosticRelatedInformation[]): DiagnosticWithLocation;
+    export function createDiagnosticForFileFromMessageChain(sourceFile: SourceFile, messageChain: DiagnosticMessageChain, relatedInformation?: DiagnosticRelatedInformation[]): DiagnosticWithLocation;
     export function createDiagnosticForRange(sourceFile: SourceFile, range: TextRange, message: DiagnosticMessage): DiagnosticWithLocation;
     export function getSpanOfTokenAtPosition(sourceFile: SourceFile, pos: number): TextSpan;
     export function getErrorSpanForNode(sourceFile: SourceFile, node: Node): TextSpan;
@@ -10044,7 +10041,6 @@ declare module "typescript" {
         getCanonicalFileName(p: string): string;
         getCommonSourceDirectory(): string;
         getCurrentDirectory(): string;
-        getCompilerOptions(): CompilerOptions;
     }
     export function getResolvedExternalModuleName(host: ResolveModuleNameResolutionHost, file: SourceFile, referenceFile?: SourceFile): string;
     export function getExternalModuleNameFromDeclaration(host: ResolveModuleNameResolutionHost, resolver: EmitResolver, declaration: ImportEqualsDeclaration | ImportDeclaration | ExportDeclaration | ModuleDeclaration | ImportTypeNode): string | undefined;

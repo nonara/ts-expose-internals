@@ -2,7 +2,7 @@
   "name": "ts-expose-internals",
   "private": false,
   "description": "Augment the TypeScript compiler module's types to expose hidden internal types",
-  "version": "4.0.5",
+  "version": "4.1.0-rc",
   "license": "MIT",
   "types": "index.d.ts",
   "author": {
@@ -28,6 +28,6 @@
   "devDependencies": {
     "@types/node": "^14.0.25",
     "ts-node": "^8.10.2",
-    "typescript": "^3.9.7"
+    "typescript": ">3.9.7"
   }
 }

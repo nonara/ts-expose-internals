@@ -17,6 +17,6 @@ if [ ! -d "${ROOT_PATH}/TypeScript" ]
 then
   PWD=$(pwd)
   cd "$ROOT_PATH" || exit 1
-  git clone https://github.com/microsoft/TypeScript.git
+  git clone https://github.com/microsoft/TypeScript.git --depth=1
   cd "$PWD" || exit 1
 fi

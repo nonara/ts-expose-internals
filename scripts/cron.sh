@@ -56,7 +56,7 @@ getTags() {
   echo "$(
     set -e
     cd "$DIR";
-    git fetch --all --tags -q --force;
+    git fetch --all --tags -q --force --depth=1;
     git tag -l | awk -v test="$GIT_TAG_REGEX" '$1~test'
   )"
 }

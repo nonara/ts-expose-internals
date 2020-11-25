@@ -4,7 +4,7 @@
 import path from 'path';
 import fs from 'fs';
 import * as ts from 'typescript';
-import { ModuleDeclaration, Node, NodeFlags, SourceFile } from 'typescript';
+import { ModuleDeclaration, Node, NodeFactoryFlags, NodeFlags, SourceFile, SyntaxKind } from 'typescript';
 
 
 /* ****************************************************************************************************************** */
@@ -60,8 +60,8 @@ const fixVersion = (tag: string) => {
   return `${major}.${minor}.${patch || 0}${textTag || ''}`;
 }
 
-
 const getRegexForLineBeginsWith = (line:string) => new RegExp(String.raw`^(\s*?)(${line})`, 'gm');
+
 const isNamespace = (node: Node): node is ModuleDeclaration =>
   ts.isModuleDeclaration(node) && !!(node.flags & NodeFlags.Namespace);
 
@@ -71,19 +71,28 @@ const isNamespace = (node: Node): node is ModuleDeclaration =>
  *       In such cases, we want to preserve the level2+ namespaces, wrapping them within our declare module 'typescript'
  *       block.
  */
-function transformRootNodes(node: Node): Node {
+function transformRootNodes(node: Node): Node | undefined {
+  const factory = ts.createNodeFactory(NodeFactoryFlags.None, ts.createBaseNodeFactory());
+
+  /* Convert ts namespaces to ambient module declarations */
   if (isNamespace(node) && (node.name.text === 'ts')) {
-    const body = node.body && ts.isModuleDeclaration(node.body) ? ts.createModuleBlock([ node.body ]) : node.body;
-    return ts.createModuleDeclaration(
+    const body = node.body && (
+      ts.isModuleDeclaration(node.body)
+        ? factory.createModuleBlock([ node.body ])
+        : node.body
+    );
+
+    return factory.createModuleDeclaration(
       node.decorators,
-      [ts.createModifier(ts.SyntaxKind.DeclareKeyword)],
-      ts.createStringLiteral("typescript"),
+      [factory.createModifier(ts.SyntaxKind.DeclareKeyword)],
+      factory.createStringLiteral("typescript"),
       body,
       ts.NodeFlags.ExportContext | ts.NodeFlags.ContextFlags
     );
   }
+
   /* Remove useless window and module declarations */
-  else if (
+  if (
     ts.isVariableStatement(node) &&
     node.declarationList.declarations.find(({ name }) => ts.isIdentifier(name) && [ 'window', 'module' ].includes(name.text))
   ) return <any>void 0;

@@ -95,8 +95,13 @@ function transformRootNodes(node: Node): Node | undefined {
   if (
     ts.isVariableStatement(node) &&
     node.declarationList.declarations.find(({ name }) => ts.isIdentifier(name) && [ 'window', 'module' ].includes(name.text))
-  ) return <any>void 0;
-  else return node;
+  )
+    return <any>void 0;
+
+  /* Remove unnecessary declarations */
+  if (node.modifiers?.find(m => m.kind === SyntaxKind.DeclareKeyword)) return void 0;
+
+  return node;
 }
 
 const replaceJsonInFile = <T>(filePath: string, replacer: (json: T) => T) => {

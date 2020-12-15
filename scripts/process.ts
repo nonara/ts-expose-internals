@@ -1,6 +1,8 @@
 /**
  * Process files before / after build
  */
+// noinspection ES6UnusedImports
+import {} from 'ts-expose-internals'
 import path from 'path';
 import fs from 'fs';
 import * as ts from 'typescript';

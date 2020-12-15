@@ -7300,8 +7300,6 @@ declare module "typescript" {
     function forEachAncestorDirectory<T>(directory: string, callback: (directory: string) => T | undefined): T | undefined;
     function isNodeModulesDirectory(dirPath: Path): boolean;
 }
-declare function setTimeout(handler: (...args: any[]) => void, timeout: number): any;
-declare function clearTimeout(handle: any): void;
 declare module "typescript" {
     /**
      * djb2 hashing algorithm
@@ -14394,7 +14392,6 @@ interface PromiseConstructor {
     reject(reason: any): Promise<never>;
     all<T>(values: (T | PromiseLike<T>)[]): Promise<T[]>;
 }
-declare var Promise: PromiseConstructor;
 declare module "typescript" {
     const scanner: Scanner;
     enum SemanticMeaning {
@@ -16279,9 +16276,6 @@ declare module "typescript" {
      */
     function transform<T extends Node>(source: T | T[], transformers: TransformerFactory<T>[], compilerOptions?: CompilerOptions): TransformationResult<T>;
 }
-declare let debugObjectHost: {
-    CollectGarbage(): void;
-};
 declare module "typescript" {
     interface ScriptSnapshotShim {
         /** Gets a portion of the script snapshot specified by [start, end). */

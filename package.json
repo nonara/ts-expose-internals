@@ -7,7 +7,8 @@
   "types": "index.d.ts",
   "scripts": {
     "clean": "rm -rf out TypeScript node_modules .cache && echo Cleaned environment. Remember to re-initialize by running npm install",
-    "prepare": "sh scripts/prepare.sh"
+    "prepare": "sh scripts/prepare.sh",
+    "typecheck": "tsc && tsc out/typescript.d.ts"
   },
   "author": {
     "name": "Ron S.",

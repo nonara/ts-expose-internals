@@ -1,5 +1,5 @@
 {
-  "include": [ "scripts", "out" ],
+  "include": [ "scripts" ],
 
   "compilerOptions": {
     "noEmit": true,

@@ -19,7 +19,7 @@ OUT_DIR="${ROOT_PATH}/out"
 GIT_TAG_REGEX='^v([3]\\.[8-9]|[4-9]\\.|\\d{2,}).+$'
 
 # Skip version tags (these won't compile)
-SKIP_VERSIONS="v3.9-beta v3.9-rc v3.9.2 v3.9.3 v3.9.5"
+SKIP_VERSIONS="v3.9-beta v3.9-rc v3.9.2 v3.9.3 v3.9.5 v3.9.8"
 
 
 # #################################################################################################################### #

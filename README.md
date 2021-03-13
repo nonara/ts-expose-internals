@@ -17,7 +17,7 @@ Expose TypeScript internal types by simply adding a development dependency.
    }
    ```
 
-2. Run `npm install` (for yarn: `yarn install`)
+2. Run `npm install` / `yarn install`
 
 3. Add the following line to your main index.ts
 
@@ -53,8 +53,6 @@ New types are added to the 'typescript' module via the
 
 - We publish for TS releases only. If you'd like nightly builds, have a look at [byots](https://github.com/basarat/byots).
 - If we don't have a package for the latest release, please allow 24hrs, then file an issue.
-- We only have types for versions 3.8 and higher. The older builds will not compile. 😢
-  - If you'd like an older version's types and can get it to build, let us know how you've configured it, and we'll publish it. 
 
 ## Acknowledgments
 

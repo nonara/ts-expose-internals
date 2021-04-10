@@ -72,7 +72,7 @@ declare module "typescript" {
     export {};
 }
 declare module "typescript" {
-    const versionMajorMinor = "4.2";
+    const versionMajorMinor = "4.3";
     /** The version of the TypeScript compiler release */
     const version: string;
     /**
@@ -260,7 +260,7 @@ declare module "typescript" {
     function contains<T>(array: readonly T[] | undefined, value: T, equalityComparer?: EqualityComparer<T>): boolean;
     function arraysEqual<T>(a: readonly T[], b: readonly T[], equalityComparer?: EqualityComparer<T>): boolean;
     function indexOfAnyCharCode(text: string, charCodes: readonly number[], start?: number): number;
-    function countWhere<T>(array: readonly T[], predicate: (x: T, i: number) => boolean): number;
+    function countWhere<T>(array: readonly T[] | undefined, predicate: (x: T, i: number) => boolean): number;
     /**
      * Filters an array by a predicate function. Returns the same array instance if the predicate is
      * true for all elements, otherwise returns a new array instance containing the filtered subset.
@@ -866,6 +866,12 @@ declare module "typescript" {
         }> | undefined;
         function assertOptionalToken(node: Node | undefined, kind: SyntaxKind | undefined, message?: string, stackCrawlMark?: AnyFunction): void;
         function assertMissingNode(node: Node | undefined, message?: string, stackCrawlMark?: AnyFunction): asserts node is undefined;
+        /**
+         * Asserts a value has the specified type in typespace only (does not perform a runtime assertion).
+         * This is useful in cases where we switch on `node.kind` and can be reasonably sure the type is accurate, and
+         * as a result can reduce the number of unnecessary casts.
+         */
+        function type<T>(value: unknown): asserts value is T;
         function getFunctionName(func: AnyFunction): any;
         function formatSymbol(symbol: Symbol): string;
         /**
@@ -1016,22 +1022,17 @@ declare module "typescript" {
     export {};
 }
 declare module "typescript" {
-    let tracing: typeof tracingEnabled | undefined;
-}
-declare module "typescript" {
+    export let tracing: typeof tracingEnabled | undefined;
     namespace tracingEnabled {
-        export enum Mode {
-            Project = 0,
-            Build = 1,
-            Server = 2
-        }
+        type Mode = "project" | "build" | "server";
         interface Args {
             [key: string]: string | number | boolean | null | undefined | Args | readonly (string | number | boolean | null | undefined | Args)[];
         }
         /** Starts tracing for the given project. */
         export function startTracing(tracingMode: Mode, traceDir: string, configFilePath?: string): void;
         /** Stops tracing for the in-progress project and dumps the type catalog. */
-        export function stopTracing(typeCatalog?: readonly Type[]): void;
+        export function stopTracing(): void;
+        export function recordType(type: Type): void;
         export enum Phase {
             Parse = "parse",
             Program = "program",
@@ -1054,9 +1055,9 @@ declare module "typescript" {
         export function dumpLegend(): void;
         export {};
     }
-}
-declare module "typescript" {
-    const startTracing: typeof tracingEnabled.startTracing;
+    export const startTracing: typeof tracingEnabled.startTracing;
+    export const dumpTracingLegend: typeof tracingEnabled.dumpLegend;
+    export {};
 }
 declare module "typescript" {
     export type Path = string & {
@@ -1229,192 +1230,196 @@ declare module "typescript" {
         FromKeyword = 153,
         GlobalKeyword = 154,
         BigIntKeyword = 155,
-        OfKeyword = 156,
-        QualifiedName = 157,
-        ComputedPropertyName = 158,
-        TypeParameter = 159,
-        Parameter = 160,
-        Decorator = 161,
-        PropertySignature = 162,
-        PropertyDeclaration = 163,
-        MethodSignature = 164,
-        MethodDeclaration = 165,
-        Constructor = 166,
-        GetAccessor = 167,
-        SetAccessor = 168,
-        CallSignature = 169,
-        ConstructSignature = 170,
-        IndexSignature = 171,
-        TypePredicate = 172,
-        TypeReference = 173,
-        FunctionType = 174,
-        ConstructorType = 175,
-        TypeQuery = 176,
-        TypeLiteral = 177,
-        ArrayType = 178,
-        TupleType = 179,
-        OptionalType = 180,
-        RestType = 181,
-        UnionType = 182,
-        IntersectionType = 183,
-        ConditionalType = 184,
-        InferType = 185,
-        ParenthesizedType = 186,
-        ThisType = 187,
-        TypeOperator = 188,
-        IndexedAccessType = 189,
-        MappedType = 190,
-        LiteralType = 191,
-        NamedTupleMember = 192,
-        TemplateLiteralType = 193,
-        TemplateLiteralTypeSpan = 194,
-        ImportType = 195,
-        ObjectBindingPattern = 196,
-        ArrayBindingPattern = 197,
-        BindingElement = 198,
-        ArrayLiteralExpression = 199,
-        ObjectLiteralExpression = 200,
-        PropertyAccessExpression = 201,
-        ElementAccessExpression = 202,
-        CallExpression = 203,
-        NewExpression = 204,
-        TaggedTemplateExpression = 205,
-        TypeAssertionExpression = 206,
-        ParenthesizedExpression = 207,
-        FunctionExpression = 208,
-        ArrowFunction = 209,
-        DeleteExpression = 210,
-        TypeOfExpression = 211,
-        VoidExpression = 212,
-        AwaitExpression = 213,
-        PrefixUnaryExpression = 214,
-        PostfixUnaryExpression = 215,
-        BinaryExpression = 216,
-        ConditionalExpression = 217,
-        TemplateExpression = 218,
-        YieldExpression = 219,
-        SpreadElement = 220,
-        ClassExpression = 221,
-        OmittedExpression = 222,
-        ExpressionWithTypeArguments = 223,
-        AsExpression = 224,
-        NonNullExpression = 225,
-        MetaProperty = 226,
-        SyntheticExpression = 227,
-        TemplateSpan = 228,
-        SemicolonClassElement = 229,
-        Block = 230,
-        EmptyStatement = 231,
-        VariableStatement = 232,
-        ExpressionStatement = 233,
-        IfStatement = 234,
-        DoStatement = 235,
-        WhileStatement = 236,
-        ForStatement = 237,
-        ForInStatement = 238,
-        ForOfStatement = 239,
-        ContinueStatement = 240,
-        BreakStatement = 241,
-        ReturnStatement = 242,
-        WithStatement = 243,
-        SwitchStatement = 244,
-        LabeledStatement = 245,
-        ThrowStatement = 246,
-        TryStatement = 247,
-        DebuggerStatement = 248,
-        VariableDeclaration = 249,
-        VariableDeclarationList = 250,
-        FunctionDeclaration = 251,
-        ClassDeclaration = 252,
-        InterfaceDeclaration = 253,
-        TypeAliasDeclaration = 254,
-        EnumDeclaration = 255,
-        ModuleDeclaration = 256,
-        ModuleBlock = 257,
-        CaseBlock = 258,
-        NamespaceExportDeclaration = 259,
-        ImportEqualsDeclaration = 260,
-        ImportDeclaration = 261,
-        ImportClause = 262,
-        NamespaceImport = 263,
-        NamedImports = 264,
-        ImportSpecifier = 265,
-        ExportAssignment = 266,
-        ExportDeclaration = 267,
-        NamedExports = 268,
-        NamespaceExport = 269,
-        ExportSpecifier = 270,
-        MissingDeclaration = 271,
-        ExternalModuleReference = 272,
-        JsxElement = 273,
-        JsxSelfClosingElement = 274,
-        JsxOpeningElement = 275,
-        JsxClosingElement = 276,
-        JsxFragment = 277,
-        JsxOpeningFragment = 278,
-        JsxClosingFragment = 279,
-        JsxAttribute = 280,
-        JsxAttributes = 281,
-        JsxSpreadAttribute = 282,
-        JsxExpression = 283,
-        CaseClause = 284,
-        DefaultClause = 285,
-        HeritageClause = 286,
-        CatchClause = 287,
-        PropertyAssignment = 288,
-        ShorthandPropertyAssignment = 289,
-        SpreadAssignment = 290,
-        EnumMember = 291,
-        UnparsedPrologue = 292,
-        UnparsedPrepend = 293,
-        UnparsedText = 294,
-        UnparsedInternalText = 295,
-        UnparsedSyntheticReference = 296,
-        SourceFile = 297,
-        Bundle = 298,
-        UnparsedSource = 299,
-        InputFiles = 300,
-        JSDocTypeExpression = 301,
-        JSDocNameReference = 302,
-        JSDocAllType = 303,
-        JSDocUnknownType = 304,
-        JSDocNullableType = 305,
-        JSDocNonNullableType = 306,
-        JSDocOptionalType = 307,
-        JSDocFunctionType = 308,
-        JSDocVariadicType = 309,
-        JSDocNamepathType = 310,
-        JSDocComment = 311,
-        JSDocTypeLiteral = 312,
-        JSDocSignature = 313,
-        JSDocTag = 314,
-        JSDocAugmentsTag = 315,
-        JSDocImplementsTag = 316,
-        JSDocAuthorTag = 317,
-        JSDocDeprecatedTag = 318,
-        JSDocClassTag = 319,
-        JSDocPublicTag = 320,
-        JSDocPrivateTag = 321,
-        JSDocProtectedTag = 322,
-        JSDocReadonlyTag = 323,
-        JSDocCallbackTag = 324,
-        JSDocEnumTag = 325,
-        JSDocParameterTag = 326,
-        JSDocReturnTag = 327,
-        JSDocThisTag = 328,
-        JSDocTypeTag = 329,
-        JSDocTemplateTag = 330,
-        JSDocTypedefTag = 331,
-        JSDocSeeTag = 332,
-        JSDocPropertyTag = 333,
-        SyntaxList = 334,
-        NotEmittedStatement = 335,
-        PartiallyEmittedExpression = 336,
-        CommaListExpression = 337,
-        MergeDeclarationMarker = 338,
-        EndOfDeclarationMarker = 339,
-        SyntheticReferenceExpression = 340,
-        Count = 341,
+        OverrideKeyword = 156,
+        OfKeyword = 157,
+        QualifiedName = 158,
+        ComputedPropertyName = 159,
+        TypeParameter = 160,
+        Parameter = 161,
+        Decorator = 162,
+        PropertySignature = 163,
+        PropertyDeclaration = 164,
+        MethodSignature = 165,
+        MethodDeclaration = 166,
+        Constructor = 167,
+        GetAccessor = 168,
+        SetAccessor = 169,
+        CallSignature = 170,
+        ConstructSignature = 171,
+        IndexSignature = 172,
+        TypePredicate = 173,
+        TypeReference = 174,
+        FunctionType = 175,
+        ConstructorType = 176,
+        TypeQuery = 177,
+        TypeLiteral = 178,
+        ArrayType = 179,
+        TupleType = 180,
+        OptionalType = 181,
+        RestType = 182,
+        UnionType = 183,
+        IntersectionType = 184,
+        ConditionalType = 185,
+        InferType = 186,
+        ParenthesizedType = 187,
+        ThisType = 188,
+        TypeOperator = 189,
+        IndexedAccessType = 190,
+        MappedType = 191,
+        LiteralType = 192,
+        NamedTupleMember = 193,
+        TemplateLiteralType = 194,
+        TemplateLiteralTypeSpan = 195,
+        ImportType = 196,
+        ObjectBindingPattern = 197,
+        ArrayBindingPattern = 198,
+        BindingElement = 199,
+        ArrayLiteralExpression = 200,
+        ObjectLiteralExpression = 201,
+        PropertyAccessExpression = 202,
+        ElementAccessExpression = 203,
+        CallExpression = 204,
+        NewExpression = 205,
+        TaggedTemplateExpression = 206,
+        TypeAssertionExpression = 207,
+        ParenthesizedExpression = 208,
+        FunctionExpression = 209,
+        ArrowFunction = 210,
+        DeleteExpression = 211,
+        TypeOfExpression = 212,
+        VoidExpression = 213,
+        AwaitExpression = 214,
+        PrefixUnaryExpression = 215,
+        PostfixUnaryExpression = 216,
+        BinaryExpression = 217,
+        ConditionalExpression = 218,
+        TemplateExpression = 219,
+        YieldExpression = 220,
+        SpreadElement = 221,
+        ClassExpression = 222,
+        OmittedExpression = 223,
+        ExpressionWithTypeArguments = 224,
+        AsExpression = 225,
+        NonNullExpression = 226,
+        MetaProperty = 227,
+        SyntheticExpression = 228,
+        TemplateSpan = 229,
+        SemicolonClassElement = 230,
+        Block = 231,
+        EmptyStatement = 232,
+        VariableStatement = 233,
+        ExpressionStatement = 234,
+        IfStatement = 235,
+        DoStatement = 236,
+        WhileStatement = 237,
+        ForStatement = 238,
+        ForInStatement = 239,
+        ForOfStatement = 240,
+        ContinueStatement = 241,
+        BreakStatement = 242,
+        ReturnStatement = 243,
+        WithStatement = 244,
+        SwitchStatement = 245,
+        LabeledStatement = 246,
+        ThrowStatement = 247,
+        TryStatement = 248,
+        DebuggerStatement = 249,
+        VariableDeclaration = 250,
+        VariableDeclarationList = 251,
+        FunctionDeclaration = 252,
+        ClassDeclaration = 253,
+        InterfaceDeclaration = 254,
+        TypeAliasDeclaration = 255,
+        EnumDeclaration = 256,
+        ModuleDeclaration = 257,
+        ModuleBlock = 258,
+        CaseBlock = 259,
+        NamespaceExportDeclaration = 260,
+        ImportEqualsDeclaration = 261,
+        ImportDeclaration = 262,
+        ImportClause = 263,
+        NamespaceImport = 264,
+        NamedImports = 265,
+        ImportSpecifier = 266,
+        ExportAssignment = 267,
+        ExportDeclaration = 268,
+        NamedExports = 269,
+        NamespaceExport = 270,
+        ExportSpecifier = 271,
+        MissingDeclaration = 272,
+        ExternalModuleReference = 273,
+        JsxElement = 274,
+        JsxSelfClosingElement = 275,
+        JsxOpeningElement = 276,
+        JsxClosingElement = 277,
+        JsxFragment = 278,
+        JsxOpeningFragment = 279,
+        JsxClosingFragment = 280,
+        JsxAttribute = 281,
+        JsxAttributes = 282,
+        JsxSpreadAttribute = 283,
+        JsxExpression = 284,
+        CaseClause = 285,
+        DefaultClause = 286,
+        HeritageClause = 287,
+        CatchClause = 288,
+        PropertyAssignment = 289,
+        ShorthandPropertyAssignment = 290,
+        SpreadAssignment = 291,
+        EnumMember = 292,
+        UnparsedPrologue = 293,
+        UnparsedPrepend = 294,
+        UnparsedText = 295,
+        UnparsedInternalText = 296,
+        UnparsedSyntheticReference = 297,
+        SourceFile = 298,
+        Bundle = 299,
+        UnparsedSource = 300,
+        InputFiles = 301,
+        JSDocTypeExpression = 302,
+        JSDocNameReference = 303,
+        JSDocAllType = 304,
+        JSDocUnknownType = 305,
+        JSDocNullableType = 306,
+        JSDocNonNullableType = 307,
+        JSDocOptionalType = 308,
+        JSDocFunctionType = 309,
+        JSDocVariadicType = 310,
+        JSDocNamepathType = 311,
+        JSDocComment = 312,
+        JSDocText = 313,
+        JSDocTypeLiteral = 314,
+        JSDocSignature = 315,
+        JSDocLink = 316,
+        JSDocTag = 317,
+        JSDocAugmentsTag = 318,
+        JSDocImplementsTag = 319,
+        JSDocAuthorTag = 320,
+        JSDocDeprecatedTag = 321,
+        JSDocClassTag = 322,
+        JSDocPublicTag = 323,
+        JSDocPrivateTag = 324,
+        JSDocProtectedTag = 325,
+        JSDocReadonlyTag = 326,
+        JSDocOverrideTag = 327,
+        JSDocCallbackTag = 328,
+        JSDocEnumTag = 329,
+        JSDocParameterTag = 330,
+        JSDocReturnTag = 331,
+        JSDocThisTag = 332,
+        JSDocTypeTag = 333,
+        JSDocTemplateTag = 334,
+        JSDocTypedefTag = 335,
+        JSDocSeeTag = 336,
+        JSDocPropertyTag = 337,
+        SyntaxList = 338,
+        NotEmittedStatement = 339,
+        PartiallyEmittedExpression = 340,
+        CommaListExpression = 341,
+        MergeDeclarationMarker = 342,
+        EndOfDeclarationMarker = 343,
+        SyntheticReferenceExpression = 344,
+        Count = 345,
         FirstAssignment = 62,
         LastAssignment = 77,
         FirstCompoundAssignment = 63,
@@ -1422,15 +1427,15 @@ declare module "typescript" {
         FirstReservedWord = 80,
         LastReservedWord = 115,
         FirstKeyword = 80,
-        LastKeyword = 156,
+        LastKeyword = 157,
         FirstFutureReservedWord = 116,
         LastFutureReservedWord = 124,
-        FirstTypeNode = 172,
-        LastTypeNode = 195,
+        FirstTypeNode = 173,
+        LastTypeNode = 196,
         FirstPunctuation = 18,
         LastPunctuation = 77,
         FirstToken = 0,
-        LastToken = 156,
+        LastToken = 157,
         FirstTriviaToken = 2,
         LastTriviaToken = 7,
         FirstLiteralToken = 8,
@@ -1439,22 +1444,22 @@ declare module "typescript" {
         LastTemplateToken = 17,
         FirstBinaryOperator = 29,
         LastBinaryOperator = 77,
-        FirstStatement = 232,
-        LastStatement = 248,
-        FirstNode = 157,
-        FirstJSDocNode = 301,
-        LastJSDocNode = 333,
-        FirstJSDocTagNode = 314,
-        LastJSDocTagNode = 333,
+        FirstStatement = 233,
+        LastStatement = 249,
+        FirstNode = 158,
+        FirstJSDocNode = 302,
+        LastJSDocNode = 337,
+        FirstJSDocTagNode = 317,
+        LastJSDocTagNode = 337,
         FirstContextualKeyword = 125,
-        LastContextualKeyword = 156
+        LastContextualKeyword = 157
     }
     export type TriviaSyntaxKind = SyntaxKind.SingleLineCommentTrivia | SyntaxKind.MultiLineCommentTrivia | SyntaxKind.NewLineTrivia | SyntaxKind.WhitespaceTrivia | SyntaxKind.ShebangTrivia | SyntaxKind.ConflictMarkerTrivia;
     export type LiteralSyntaxKind = SyntaxKind.NumericLiteral | SyntaxKind.BigIntLiteral | SyntaxKind.StringLiteral | SyntaxKind.JsxText | SyntaxKind.JsxTextAllWhiteSpaces | SyntaxKind.RegularExpressionLiteral | SyntaxKind.NoSubstitutionTemplateLiteral;
     export type PseudoLiteralSyntaxKind = SyntaxKind.TemplateHead | SyntaxKind.TemplateMiddle | SyntaxKind.TemplateTail;
     export type PunctuationSyntaxKind = SyntaxKind.OpenBraceToken | SyntaxKind.CloseBraceToken | SyntaxKind.OpenParenToken | SyntaxKind.CloseParenToken | SyntaxKind.OpenBracketToken | SyntaxKind.CloseBracketToken | SyntaxKind.DotToken | SyntaxKind.DotDotDotToken | SyntaxKind.SemicolonToken | SyntaxKind.CommaToken | SyntaxKind.QuestionDotToken | SyntaxKind.LessThanToken | SyntaxKind.LessThanSlashToken | SyntaxKind.GreaterThanToken | SyntaxKind.LessThanEqualsToken | SyntaxKind.GreaterThanEqualsToken | SyntaxKind.EqualsEqualsToken | SyntaxKind.ExclamationEqualsToken | SyntaxKind.EqualsEqualsEqualsToken | SyntaxKind.ExclamationEqualsEqualsToken | SyntaxKind.EqualsGreaterThanToken | SyntaxKind.PlusToken | SyntaxKind.MinusToken | SyntaxKind.AsteriskToken | SyntaxKind.AsteriskAsteriskToken | SyntaxKind.SlashToken | SyntaxKind.PercentToken | SyntaxKind.PlusPlusToken | SyntaxKind.MinusMinusToken | SyntaxKind.LessThanLessThanToken | SyntaxKind.GreaterThanGreaterThanToken | SyntaxKind.GreaterThanGreaterThanGreaterThanToken | SyntaxKind.AmpersandToken | SyntaxKind.BarToken | SyntaxKind.CaretToken | SyntaxKind.ExclamationToken | SyntaxKind.TildeToken | SyntaxKind.AmpersandAmpersandToken | SyntaxKind.BarBarToken | SyntaxKind.QuestionQuestionToken | SyntaxKind.QuestionToken | SyntaxKind.ColonToken | SyntaxKind.AtToken | SyntaxKind.BacktickToken | SyntaxKind.EqualsToken | SyntaxKind.PlusEqualsToken | SyntaxKind.MinusEqualsToken | SyntaxKind.AsteriskEqualsToken | SyntaxKind.AsteriskAsteriskEqualsToken | SyntaxKind.SlashEqualsToken | SyntaxKind.PercentEqualsToken | SyntaxKind.LessThanLessThanEqualsToken | SyntaxKind.GreaterThanGreaterThanEqualsToken | SyntaxKind.GreaterThanGreaterThanGreaterThanEqualsToken | SyntaxKind.AmpersandEqualsToken | SyntaxKind.BarEqualsToken | SyntaxKind.CaretEqualsToken;
-    export type KeywordSyntaxKind = SyntaxKind.AbstractKeyword | SyntaxKind.AnyKeyword | SyntaxKind.AsKeyword | SyntaxKind.AssertsKeyword | SyntaxKind.AsyncKeyword | SyntaxKind.AwaitKeyword | SyntaxKind.BigIntKeyword | SyntaxKind.BooleanKeyword | SyntaxKind.BreakKeyword | SyntaxKind.CaseKeyword | SyntaxKind.CatchKeyword | SyntaxKind.ClassKeyword | SyntaxKind.ConstKeyword | SyntaxKind.ConstructorKeyword | SyntaxKind.ContinueKeyword | SyntaxKind.DebuggerKeyword | SyntaxKind.DeclareKeyword | SyntaxKind.DefaultKeyword | SyntaxKind.DeleteKeyword | SyntaxKind.DoKeyword | SyntaxKind.ElseKeyword | SyntaxKind.EnumKeyword | SyntaxKind.ExportKeyword | SyntaxKind.ExtendsKeyword | SyntaxKind.FalseKeyword | SyntaxKind.FinallyKeyword | SyntaxKind.ForKeyword | SyntaxKind.FromKeyword | SyntaxKind.FunctionKeyword | SyntaxKind.GetKeyword | SyntaxKind.GlobalKeyword | SyntaxKind.IfKeyword | SyntaxKind.ImplementsKeyword | SyntaxKind.ImportKeyword | SyntaxKind.InferKeyword | SyntaxKind.InKeyword | SyntaxKind.InstanceOfKeyword | SyntaxKind.InterfaceKeyword | SyntaxKind.IntrinsicKeyword | SyntaxKind.IsKeyword | SyntaxKind.KeyOfKeyword | SyntaxKind.LetKeyword | SyntaxKind.ModuleKeyword | SyntaxKind.NamespaceKeyword | SyntaxKind.NeverKeyword | SyntaxKind.NewKeyword | SyntaxKind.NullKeyword | SyntaxKind.NumberKeyword | SyntaxKind.ObjectKeyword | SyntaxKind.OfKeyword | SyntaxKind.PackageKeyword | SyntaxKind.PrivateKeyword | SyntaxKind.ProtectedKeyword | SyntaxKind.PublicKeyword | SyntaxKind.ReadonlyKeyword | SyntaxKind.RequireKeyword | SyntaxKind.ReturnKeyword | SyntaxKind.SetKeyword | SyntaxKind.StaticKeyword | SyntaxKind.StringKeyword | SyntaxKind.SuperKeyword | SyntaxKind.SwitchKeyword | SyntaxKind.SymbolKeyword | SyntaxKind.ThisKeyword | SyntaxKind.ThrowKeyword | SyntaxKind.TrueKeyword | SyntaxKind.TryKeyword | SyntaxKind.TypeKeyword | SyntaxKind.TypeOfKeyword | SyntaxKind.UndefinedKeyword | SyntaxKind.UniqueKeyword | SyntaxKind.UnknownKeyword | SyntaxKind.VarKeyword | SyntaxKind.VoidKeyword | SyntaxKind.WhileKeyword | SyntaxKind.WithKeyword | SyntaxKind.YieldKeyword;
-    export type ModifierSyntaxKind = SyntaxKind.AbstractKeyword | SyntaxKind.AsyncKeyword | SyntaxKind.ConstKeyword | SyntaxKind.DeclareKeyword | SyntaxKind.DefaultKeyword | SyntaxKind.ExportKeyword | SyntaxKind.PrivateKeyword | SyntaxKind.ProtectedKeyword | SyntaxKind.PublicKeyword | SyntaxKind.ReadonlyKeyword | SyntaxKind.StaticKeyword;
+    export type KeywordSyntaxKind = SyntaxKind.AbstractKeyword | SyntaxKind.AnyKeyword | SyntaxKind.AsKeyword | SyntaxKind.AssertsKeyword | SyntaxKind.AsyncKeyword | SyntaxKind.AwaitKeyword | SyntaxKind.BigIntKeyword | SyntaxKind.BooleanKeyword | SyntaxKind.BreakKeyword | SyntaxKind.CaseKeyword | SyntaxKind.CatchKeyword | SyntaxKind.ClassKeyword | SyntaxKind.ConstKeyword | SyntaxKind.ConstructorKeyword | SyntaxKind.ContinueKeyword | SyntaxKind.DebuggerKeyword | SyntaxKind.DeclareKeyword | SyntaxKind.DefaultKeyword | SyntaxKind.DeleteKeyword | SyntaxKind.DoKeyword | SyntaxKind.ElseKeyword | SyntaxKind.EnumKeyword | SyntaxKind.ExportKeyword | SyntaxKind.ExtendsKeyword | SyntaxKind.FalseKeyword | SyntaxKind.FinallyKeyword | SyntaxKind.ForKeyword | SyntaxKind.FromKeyword | SyntaxKind.FunctionKeyword | SyntaxKind.GetKeyword | SyntaxKind.GlobalKeyword | SyntaxKind.IfKeyword | SyntaxKind.ImplementsKeyword | SyntaxKind.ImportKeyword | SyntaxKind.InferKeyword | SyntaxKind.InKeyword | SyntaxKind.InstanceOfKeyword | SyntaxKind.InterfaceKeyword | SyntaxKind.IntrinsicKeyword | SyntaxKind.IsKeyword | SyntaxKind.KeyOfKeyword | SyntaxKind.LetKeyword | SyntaxKind.ModuleKeyword | SyntaxKind.NamespaceKeyword | SyntaxKind.NeverKeyword | SyntaxKind.NewKeyword | SyntaxKind.NullKeyword | SyntaxKind.NumberKeyword | SyntaxKind.ObjectKeyword | SyntaxKind.OfKeyword | SyntaxKind.PackageKeyword | SyntaxKind.PrivateKeyword | SyntaxKind.ProtectedKeyword | SyntaxKind.PublicKeyword | SyntaxKind.ReadonlyKeyword | SyntaxKind.OverrideKeyword | SyntaxKind.RequireKeyword | SyntaxKind.ReturnKeyword | SyntaxKind.SetKeyword | SyntaxKind.StaticKeyword | SyntaxKind.StringKeyword | SyntaxKind.SuperKeyword | SyntaxKind.SwitchKeyword | SyntaxKind.SymbolKeyword | SyntaxKind.ThisKeyword | SyntaxKind.ThrowKeyword | SyntaxKind.TrueKeyword | SyntaxKind.TryKeyword | SyntaxKind.TypeKeyword | SyntaxKind.TypeOfKeyword | SyntaxKind.UndefinedKeyword | SyntaxKind.UniqueKeyword | SyntaxKind.UnknownKeyword | SyntaxKind.VarKeyword | SyntaxKind.VoidKeyword | SyntaxKind.WhileKeyword | SyntaxKind.WithKeyword | SyntaxKind.YieldKeyword;
+    export type ModifierSyntaxKind = SyntaxKind.AbstractKeyword | SyntaxKind.AsyncKeyword | SyntaxKind.ConstKeyword | SyntaxKind.DeclareKeyword | SyntaxKind.DefaultKeyword | SyntaxKind.ExportKeyword | SyntaxKind.PrivateKeyword | SyntaxKind.ProtectedKeyword | SyntaxKind.PublicKeyword | SyntaxKind.ReadonlyKeyword | SyntaxKind.OverrideKeyword | SyntaxKind.StaticKeyword;
     export type KeywordTypeSyntaxKind = SyntaxKind.AnyKeyword | SyntaxKind.BigIntKeyword | SyntaxKind.BooleanKeyword | SyntaxKind.IntrinsicKeyword | SyntaxKind.NeverKeyword | SyntaxKind.NumberKeyword | SyntaxKind.ObjectKeyword | SyntaxKind.StringKeyword | SyntaxKind.SymbolKeyword | SyntaxKind.UndefinedKeyword | SyntaxKind.UnknownKeyword | SyntaxKind.VoidKeyword;
     export type TypeNodeSyntaxKind = KeywordTypeSyntaxKind | SyntaxKind.TypePredicate | SyntaxKind.TypeReference | SyntaxKind.FunctionType | SyntaxKind.ConstructorType | SyntaxKind.TypeQuery | SyntaxKind.TypeLiteral | SyntaxKind.ArrayType | SyntaxKind.TupleType | SyntaxKind.NamedTupleMember | SyntaxKind.OptionalType | SyntaxKind.RestType | SyntaxKind.UnionType | SyntaxKind.IntersectionType | SyntaxKind.ConditionalType | SyntaxKind.InferType | SyntaxKind.ParenthesizedType | SyntaxKind.ThisType | SyntaxKind.TypeOperator | SyntaxKind.IndexedAccessType | SyntaxKind.MappedType | SyntaxKind.LiteralType | SyntaxKind.TemplateLiteralType | SyntaxKind.TemplateLiteralTypeSpan | SyntaxKind.ImportType | SyntaxKind.ExpressionWithTypeArguments | SyntaxKind.JSDocTypeExpression | SyntaxKind.JSDocAllType | SyntaxKind.JSDocUnknownType | SyntaxKind.JSDocNonNullableType | SyntaxKind.JSDocNullableType | SyntaxKind.JSDocOptionalType | SyntaxKind.JSDocFunctionType | SyntaxKind.JSDocVariadicType | SyntaxKind.JSDocNamepathType | SyntaxKind.JSDocSignature | SyntaxKind.JSDocTypeLiteral;
     export type TokenSyntaxKind = SyntaxKind.Unknown | SyntaxKind.EndOfFileToken | TriviaSyntaxKind | LiteralSyntaxKind | PseudoLiteralSyntaxKind | PunctuationSyntaxKind | SyntaxKind.Identifier | KeywordSyntaxKind;
@@ -1512,13 +1517,14 @@ declare module "typescript" {
         Const = 2048,
         HasComputedJSDocModifiers = 4096,
         Deprecated = 8192,
+        Override = 16384,
         HasComputedFlags = 536870912,
         AccessibilityModifier = 28,
         ParameterPropertyModifier = 92,
         NonPublicAccessibilityModifier = 24,
-        TypeScriptModifier = 2270,
+        TypeScriptModifier = 18654,
         ExportDefault = 513,
-        All = 11263
+        All = 27647
     }
     export enum JsxFlags {
         None = 0,
@@ -1560,7 +1566,7 @@ declare module "typescript" {
         jsDoc?: JSDoc[];
         jsDocCache?: readonly JSDocTag[];
     }
-    export type HasJSDoc = ParameterDeclaration | CallSignatureDeclaration | ConstructSignatureDeclaration | MethodSignature | PropertySignature | ArrowFunction | ParenthesizedExpression | SpreadAssignment | ShorthandPropertyAssignment | PropertyAssignment | FunctionExpression | LabeledStatement | ExpressionStatement | VariableStatement | FunctionDeclaration | ConstructorDeclaration | MethodDeclaration | PropertyDeclaration | AccessorDeclaration | ClassLikeDeclaration | InterfaceDeclaration | TypeAliasDeclaration | EnumMember | EnumDeclaration | ModuleDeclaration | ImportEqualsDeclaration | ImportDeclaration | NamespaceExportDeclaration | ExportAssignment | IndexSignatureDeclaration | FunctionTypeNode | ConstructorTypeNode | JSDocFunctionType | ExportDeclaration | NamedTupleMember | EndOfFileToken;
+    export type HasJSDoc = ParameterDeclaration | CallSignatureDeclaration | ConstructSignatureDeclaration | MethodSignature | PropertySignature | ArrowFunction | ParenthesizedExpression | SpreadAssignment | ShorthandPropertyAssignment | PropertyAssignment | FunctionExpression | LabeledStatement | ExpressionStatement | VariableStatement | FunctionDeclaration | ConstructorDeclaration | MethodDeclaration | VariableDeclaration | PropertyDeclaration | AccessorDeclaration | ClassLikeDeclaration | InterfaceDeclaration | TypeAliasDeclaration | EnumMember | EnumDeclaration | ModuleDeclaration | ImportEqualsDeclaration | ImportDeclaration | NamespaceExportDeclaration | ExportAssignment | IndexSignatureDeclaration | FunctionTypeNode | ConstructorTypeNode | JSDocFunctionType | ExportDeclaration | NamedTupleMember | EndOfFileToken;
     export type HasType = SignatureDeclaration | VariableDeclaration | ParameterDeclaration | PropertySignature | PropertyDeclaration | TypePredicateNode | ParenthesizedTypeNode | TypeOperatorNode | MappedTypeNode | AssertionExpression | TypeAliasDeclaration | JSDocTypeExpression | JSDocNonNullableType | JSDocNullableType | JSDocOptionalType | JSDocVariadicType;
     export type HasTypeArguments = CallExpression | NewExpression | TaggedTemplateExpression | JsxOpeningElement | JsxSelfClosingElement;
     export type HasInitializer = HasExpressionInitializer | ForStatement | ForInStatement | ForOfStatement | JsxAttribute;
@@ -1608,10 +1614,11 @@ declare module "typescript" {
     export type ProtectedKeyword = ModifierToken<SyntaxKind.ProtectedKeyword>;
     export type PublicKeyword = ModifierToken<SyntaxKind.PublicKeyword>;
     export type ReadonlyKeyword = ModifierToken<SyntaxKind.ReadonlyKeyword>;
+    export type OverrideKeyword = ModifierToken<SyntaxKind.OverrideKeyword>;
     export type StaticKeyword = ModifierToken<SyntaxKind.StaticKeyword>;
     /** @deprecated Use `ReadonlyKeyword` instead. */
     export type ReadonlyToken = ReadonlyKeyword;
-    export type Modifier = AbstractKeyword | AsyncKeyword | ConstKeyword | DeclareKeyword | DefaultKeyword | ExportKeyword | PrivateKeyword | ProtectedKeyword | PublicKeyword | ReadonlyKeyword | StaticKeyword;
+    export type Modifier = AbstractKeyword | AsyncKeyword | ConstKeyword | DeclareKeyword | DefaultKeyword | ExportKeyword | PrivateKeyword | ProtectedKeyword | PublicKeyword | OverrideKeyword | ReadonlyKeyword | StaticKeyword;
     export type AccessibilityModifier = PublicKeyword | PrivateKeyword | ProtectedKeyword;
     export type ParameterPropertyModifier = AccessibilityModifier | ReadonlyKeyword;
     export type ClassMemberModifier = AccessibilityModifier | ReadonlyKeyword | StaticKeyword;
@@ -1657,6 +1664,7 @@ declare module "typescript" {
     }
     export type EntityName = Identifier | QualifiedName;
     export type PropertyName = Identifier | StringLiteral | NumericLiteral | ComputedPropertyName | PrivateIdentifier;
+    export type MemberName = Identifier | PrivateIdentifier;
     export type DeclarationName = Identifier | PrivateIdentifier | StringLiteralLike | NumericLiteral | ComputedPropertyName | ElementAccessExpression | BindingPattern | EntityNameExpression;
     export interface Declaration extends Node {
         _declarationBrand: any;
@@ -1724,7 +1732,7 @@ declare module "typescript" {
         readonly kind: SyntaxKind.ConstructSignature;
     }
     export type BindingName = Identifier | BindingPattern;
-    export interface VariableDeclaration extends NamedDeclaration {
+    export interface VariableDeclaration extends NamedDeclaration, JSDocContainer {
         readonly kind: SyntaxKind.VariableDeclaration;
         readonly parent: VariableDeclarationList | CatchClause;
         readonly name: BindingName;
@@ -1777,6 +1785,17 @@ declare module "typescript" {
     export interface PrivateIdentifierPropertyDeclaration extends PropertyDeclaration {
         name: PrivateIdentifier;
     }
+    export interface PrivateIdentifierMethodDeclaration extends MethodDeclaration {
+        name: PrivateIdentifier;
+    }
+    export interface PrivateIdentifierGetAccessorDeclaration extends GetAccessorDeclaration {
+        name: PrivateIdentifier;
+    }
+    export interface PrivateIdentifierSetAccessorDeclaration extends SetAccessorDeclaration {
+        name: PrivateIdentifier;
+    }
+    export type PrivateIdentifierAccessorDeclaration = PrivateIdentifierGetAccessorDeclaration | PrivateIdentifierSetAccessorDeclaration;
+    export type PrivateClassElementDeclaration = PrivateIdentifierPropertyDeclaration | PrivateIdentifierMethodDeclaration | PrivateIdentifierGetAccessorDeclaration | PrivateIdentifierSetAccessorDeclaration;
     export type InitializedPropertyDeclaration = PropertyDeclaration & {
         readonly initializer: Expression;
     };
@@ -1873,16 +1892,16 @@ declare module "typescript" {
         readonly kind: SyntaxKind.SemicolonClassElement;
         readonly parent: ClassLikeDeclaration;
     }
-    export interface GetAccessorDeclaration extends FunctionLikeDeclarationBase, ClassElement, ObjectLiteralElement, JSDocContainer {
+    export interface GetAccessorDeclaration extends FunctionLikeDeclarationBase, ClassElement, TypeElement, ObjectLiteralElement, JSDocContainer {
         readonly kind: SyntaxKind.GetAccessor;
-        readonly parent: ClassLikeDeclaration | ObjectLiteralExpression;
+        readonly parent: ClassLikeDeclaration | ObjectLiteralExpression | TypeLiteralNode | InterfaceDeclaration;
         readonly name: PropertyName;
         readonly body?: FunctionBody;
         typeParameters?: NodeArray<TypeParameterDeclaration>;
     }
-    export interface SetAccessorDeclaration extends FunctionLikeDeclarationBase, ClassElement, ObjectLiteralElement, JSDocContainer {
+    export interface SetAccessorDeclaration extends FunctionLikeDeclarationBase, ClassElement, TypeElement, ObjectLiteralElement, JSDocContainer {
         readonly kind: SyntaxKind.SetAccessor;
-        readonly parent: ClassLikeDeclaration | ObjectLiteralExpression;
+        readonly parent: ClassLikeDeclaration | ObjectLiteralExpression | TypeLiteralNode | InterfaceDeclaration;
         readonly name: PropertyName;
         readonly body?: FunctionBody;
         typeParameters?: NodeArray<TypeParameterDeclaration>;
@@ -2304,14 +2323,14 @@ declare module "typescript" {
         readonly kind: SyntaxKind.PropertyAccessExpression;
         readonly expression: LeftHandSideExpression;
         readonly questionDotToken?: QuestionDotToken;
-        readonly name: Identifier | PrivateIdentifier;
+        readonly name: MemberName;
     }
     export interface PrivateIdentifierPropertyAccessExpression extends PropertyAccessExpression {
         readonly name: PrivateIdentifier;
     }
     export interface PropertyAccessChain extends PropertyAccessExpression {
         _optionalChainBrand: any;
-        readonly name: Identifier | PrivateIdentifier;
+        readonly name: MemberName;
     }
     export interface PropertyAccessChainRoot extends PropertyAccessChain {
         readonly questionDotToken: QuestionDotToken;
@@ -2357,13 +2376,6 @@ declare module "typescript" {
     export type OptionalChain = PropertyAccessChain | ElementAccessChain | CallChain | NonNullChain;
     export type OptionalChainRoot = PropertyAccessChainRoot | ElementAccessChainRoot | CallChainRoot;
     /** @internal */
-    export interface WellKnownSymbolExpression extends PropertyAccessExpression {
-        readonly expression: Identifier & {
-            readonly escapedText: __String & "Symbol";
-        };
-        readonly name: Identifier;
-    }
-    /** @internal */
     export type BindableObjectDefinePropertyCall = CallExpression & {
         readonly arguments: readonly [
             BindableStaticNameExpression,
@@ -2375,7 +2387,7 @@ declare module "typescript" {
     export type BindableStaticNameExpression = EntityNameExpression | BindableStaticElementAccessExpression;
     /** @internal */
     export type LiteralLikeElementAccessExpression = ElementAccessExpression & Declaration & {
-        readonly argumentExpression: StringLiteralLike | NumericLiteral | WellKnownSymbolExpression;
+        readonly argumentExpression: StringLiteralLike | NumericLiteral;
     };
     /** @internal */
     export type BindableStaticElementAccessExpression = LiteralLikeElementAccessExpression & {
@@ -2922,12 +2934,21 @@ declare module "typescript" {
         readonly kind: SyntaxKind.JSDocComment;
         readonly parent: HasJSDoc;
         readonly tags?: NodeArray<JSDocTag>;
-        readonly comment?: string;
+        readonly comment?: string | NodeArray<JSDocText | JSDocLink>;
     }
     export interface JSDocTag extends Node {
         readonly parent: JSDoc | JSDocTypeLiteral;
         readonly tagName: Identifier;
-        readonly comment?: string;
+        readonly comment?: string | NodeArray<JSDocText | JSDocLink>;
+    }
+    export interface JSDocLink extends Node {
+        readonly kind: SyntaxKind.JSDocLink;
+        readonly name?: EntityName;
+        text: string;
+    }
+    export interface JSDocText extends Node {
+        readonly kind: SyntaxKind.JSDocText;
+        text: string;
     }
     export interface JSDocUnknownTag extends JSDocTag {
         readonly kind: SyntaxKind.JSDocTag;
@@ -2968,6 +2989,9 @@ declare module "typescript" {
     }
     export interface JSDocReadonlyTag extends JSDocTag {
         readonly kind: SyntaxKind.JSDocReadonlyTag;
+    }
+    export interface JSDocOverrideTag extends JSDocTag {
+        readonly kind: SyntaxKind.JSDocOverrideTag;
     }
     export interface JSDocEnumTag extends JSDocTag, Declaration {
         readonly kind: SyntaxKind.JSDocEnumTag;
@@ -3422,7 +3446,6 @@ declare module "typescript" {
         dropDiagnosticsProducingTypeChecker(): void;
         getCachedSemanticDiagnostics(sourceFile?: SourceFile): readonly Diagnostic[] | undefined;
         getClassifiableNames(): Set<__String>;
-        getTypeCatalog(): readonly Type[];
         getNodeCount(): number;
         getIdentifierCount(): number;
         getSymbolCount(): number;
@@ -3595,7 +3618,7 @@ declare module "typescript" {
          * The function returns the value (local variable) symbol of an identifier in the short-hand property assignment.
          * This is necessary as an identifier in short-hand property assignment can contains two meaning: property name and property value.
          */
-        getShorthandAssignmentValueSymbol(location: Node): Symbol | undefined;
+        getShorthandAssignmentValueSymbol(location: Node | undefined): Symbol | undefined;
         getExportSpecifierLocalTargetSymbol(location: ExportSpecifier | Identifier): Symbol | undefined;
         /**
          * If a symbol is a local symbol with an associated exported symbol, returns the exported symbol.
@@ -3664,9 +3687,9 @@ declare module "typescript" {
          */
         tryGetMemberInModuleExportsAndProperties(memberName: string, moduleSymbol: Symbol): Symbol | undefined;
         getApparentType(type: Type): Type;
-        getSuggestedSymbolForNonexistentProperty(name: Identifier | PrivateIdentifier | string, containingType: Type): Symbol | undefined;
+        getSuggestedSymbolForNonexistentProperty(name: MemberName | string, containingType: Type): Symbol | undefined;
         getSuggestedSymbolForNonexistentJSXAttribute(name: Identifier | string, containingType: Type): Symbol | undefined;
-        getSuggestionForNonexistentProperty(name: Identifier | PrivateIdentifier | string, containingType: Type): string | undefined;
+        getSuggestionForNonexistentProperty(name: MemberName | string, containingType: Type): string | undefined;
         getSuggestedSymbolForNonexistentSymbol(location: Node, name: string, meaning: SymbolFlags): Symbol | undefined;
         getSuggestionForNonexistentSymbol(location: Node, name: string, meaning: SymbolFlags): string | undefined;
         getSuggestedSymbolForNonexistentModule(node: Identifier, target: Symbol): Symbol | undefined;
@@ -3695,12 +3718,12 @@ declare module "typescript" {
         createSymbol(flags: SymbolFlags, name: __String): TransientSymbol;
         createIndexInfo(type: Type, isReadonly: boolean, declaration?: SignatureDeclaration): IndexInfo;
         isSymbolAccessible(symbol: Symbol, enclosingDeclaration: Node | undefined, meaning: SymbolFlags, shouldComputeAliasToMarkVisible: boolean): SymbolAccessibilityResult;
+        tryFindAmbientModule(moduleName: string): Symbol | undefined;
         tryFindAmbientModuleWithoutAugmentations(moduleName: string): Symbol | undefined;
         getSymbolWalker(accept?: (symbol: Symbol) => boolean): SymbolWalker;
         getDiagnostics(sourceFile?: SourceFile, cancellationToken?: CancellationToken): Diagnostic[];
         getGlobalDiagnostics(): Diagnostic[];
         getEmitResolver(sourceFile?: SourceFile, cancellationToken?: CancellationToken): EmitResolver;
-        getTypeCatalog(): readonly Type[];
         getNodeCount(): number;
         getIdentifierCount(): number;
         getSymbolCount(): number;
@@ -3797,6 +3820,8 @@ declare module "typescript" {
         NoTypeReduction = 536870912,
         NoUndefinedOptionalParameterType = 1073741824,
         AllowThisInObjectLiteral = 32768,
+        AllowQualifiedNameInPlaceOfIdentifier = 65536,
+        /** @deprecated AllowQualifedNameInPlaceOfIdentifier. Use AllowQualifiedNameInPlaceOfIdentifier instead. */
         AllowQualifedNameInPlaceOfIdentifier = 65536,
         AllowAnonymousIdentifier = 131072,
         AllowEmptyUnionOrIntersection = 262144,
@@ -4088,8 +4113,8 @@ declare module "typescript" {
     export interface Symbol {
         flags: SymbolFlags;
         escapedName: __String;
-        declarations: Declaration[];
-        valueDeclaration: Declaration;
+        declarations?: Declaration[];
+        valueDeclaration?: Declaration;
         members?: SymbolTable;
         exports?: SymbolTable;
         globalExports?: SymbolTable;
@@ -4107,6 +4132,7 @@ declare module "typescript" {
         immediateTarget?: Symbol;
         target?: Symbol;
         type?: Type;
+        writeType?: Type;
         nameType?: Type;
         uniqueESSymbolType?: Type;
         declaredType?: Type;
@@ -4537,6 +4563,8 @@ declare module "typescript" {
         resolvedReducedType?: Type;
         regularType?: UnionType;
         origin?: Type;
+        keyPropertyName?: __String;
+        constituentMap?: ESMap<TypeId, Type>;
     }
     export interface IntersectionType extends UnionOrIntersectionType {
         resolvedApparentType: Type;
@@ -4696,9 +4724,11 @@ declare module "typescript" {
         resolvedMinArgumentCount?: number;
         target?: Signature;
         mapper?: TypeMapper;
-        unionSignatures?: Signature[];
+        compositeSignatures?: Signature[];
+        compositeKind?: TypeFlags;
         erasedSignatureCache?: Signature;
         canonicalSignatureCache?: Signature;
+        baseSignatureCache?: Signature;
         optionalCallSignatureCache?: {
             inner?: Signature;
             outer?: Signature;
@@ -4897,18 +4927,21 @@ declare module "typescript" {
         FixedPollingInterval = 0,
         PriorityPollingInterval = 1,
         DynamicPriorityPolling = 2,
-        UseFsEvents = 3,
-        UseFsEventsOnParentDirectory = 4
+        FixedChunkSizePolling = 3,
+        UseFsEvents = 4,
+        UseFsEventsOnParentDirectory = 5
     }
     export enum WatchDirectoryKind {
         UseFsEvents = 0,
         FixedPollingInterval = 1,
-        DynamicPriorityPolling = 2
+        DynamicPriorityPolling = 2,
+        FixedChunkSizePolling = 3
     }
     export enum PollingWatchKind {
         FixedInterval = 0,
         PriorityInterval = 1,
-        DynamicPriority = 2
+        DynamicPriority = 2,
+        FixedChunkSize = 3
     }
     export type CompilerOptionsValue = string | number | boolean | (string | number)[] | string[] | MapLike<string[]> | PluginImport[] | ProjectReference[] | null | undefined;
     export interface CompilerOptions {
@@ -4991,6 +5024,7 @@ declare module "typescript" {
         pathsBasePath?: string;
         plugins?: PluginImport[];
         preserveConstEnums?: boolean;
+        noImplicitOverride?: boolean;
         preserveSymlinks?: boolean;
         preserveWatchOutput?: boolean;
         project?: string;
@@ -5107,6 +5141,7 @@ declare module "typescript" {
         ES2018 = 5,
         ES2019 = 6,
         ES2020 = 7,
+        ES2021 = 8,
         ESNext = 99,
         JSON = 100,
         Latest = 99
@@ -5439,6 +5474,7 @@ declare module "typescript" {
         resolveTypeReferenceDirectives?(typeReferenceDirectiveNames: string[], containingFile: string, redirectedReference: ResolvedProjectReference | undefined, options: CompilerOptions): (ResolvedTypeReferenceDirective | undefined)[];
         getEnvironmentVariable?(name: string): string | undefined;
         onReleaseOldSourceFile?(oldSourceFile: SourceFile, oldOptions: CompilerOptions, hasSourceFileByPath: boolean): void;
+        onReleaseParsedCommandLine?(configFileName: string, oldResolvedRef: ResolvedProjectReference | undefined, optionOptions: CompilerOptions): void;
         hasInvalidatedResolution?: HasInvalidatedResolution;
         hasChangedAutomaticTypeDirectiveNames?: HasChangedAutomaticTypeDirectiveNames;
         createHash?(data: string): string;
@@ -5446,6 +5482,7 @@ declare module "typescript" {
         useSourceOfProjectReferenceRedirect?(): boolean;
         createDirectory?(directory: string): void;
         getSymlinkCache?(): SymlinkCache;
+        disableUseFileVersionAsSignature?: boolean;
     }
     /** true if --out otherwise source file name */
     export type SourceOfProjectReferenceRedirect = string | true;
@@ -5458,57 +5495,59 @@ declare module "typescript" {
         ContainsTypeScript = 1,
         ContainsJsx = 2,
         ContainsESNext = 4,
-        ContainsES2020 = 8,
-        ContainsES2019 = 16,
-        ContainsES2018 = 32,
-        ContainsES2017 = 64,
-        ContainsES2016 = 128,
-        ContainsES2015 = 256,
-        ContainsGenerator = 512,
-        ContainsDestructuringAssignment = 1024,
-        ContainsTypeScriptClassSyntax = 2048,
-        ContainsLexicalThis = 4096,
-        ContainsRestOrSpread = 8192,
-        ContainsObjectRestOrSpread = 16384,
-        ContainsComputedPropertyName = 32768,
-        ContainsBlockScopedBinding = 65536,
-        ContainsBindingPattern = 131072,
-        ContainsYield = 262144,
-        ContainsAwait = 524288,
-        ContainsHoistedDeclarationOrCompletion = 1048576,
-        ContainsDynamicImport = 2097152,
-        ContainsClassFields = 4194304,
-        ContainsPossibleTopLevelAwait = 8388608,
+        ContainsES2021 = 8,
+        ContainsES2020 = 16,
+        ContainsES2019 = 32,
+        ContainsES2018 = 64,
+        ContainsES2017 = 128,
+        ContainsES2016 = 256,
+        ContainsES2015 = 512,
+        ContainsGenerator = 1024,
+        ContainsDestructuringAssignment = 2048,
+        ContainsTypeScriptClassSyntax = 4096,
+        ContainsLexicalThis = 8192,
+        ContainsRestOrSpread = 16384,
+        ContainsObjectRestOrSpread = 32768,
+        ContainsComputedPropertyName = 65536,
+        ContainsBlockScopedBinding = 131072,
+        ContainsBindingPattern = 262144,
+        ContainsYield = 524288,
+        ContainsAwait = 1048576,
+        ContainsHoistedDeclarationOrCompletion = 2097152,
+        ContainsDynamicImport = 4194304,
+        ContainsClassFields = 8388608,
+        ContainsPossibleTopLevelAwait = 16777216,
         HasComputedFlags = 536870912,
         AssertTypeScript = 1,
         AssertJsx = 2,
         AssertESNext = 4,
-        AssertES2020 = 8,
-        AssertES2019 = 16,
-        AssertES2018 = 32,
-        AssertES2017 = 64,
-        AssertES2016 = 128,
-        AssertES2015 = 256,
-        AssertGenerator = 512,
-        AssertDestructuringAssignment = 1024,
+        AssertES2021 = 8,
+        AssertES2020 = 16,
+        AssertES2019 = 32,
+        AssertES2018 = 64,
+        AssertES2017 = 128,
+        AssertES2016 = 256,
+        AssertES2015 = 512,
+        AssertGenerator = 1024,
+        AssertDestructuringAssignment = 2048,
         OuterExpressionExcludes = 536870912,
         PropertyAccessExcludes = 536870912,
         NodeExcludes = 536870912,
-        ArrowFunctionExcludes = 547309568,
-        FunctionExcludes = 547313664,
-        ConstructorExcludes = 547311616,
-        MethodOrAccessorExcludes = 538923008,
-        PropertyExcludes = 536875008,
-        ClassExcludes = 536905728,
-        ModuleExcludes = 546379776,
+        ArrowFunctionExcludes = 557748224,
+        FunctionExcludes = 557756416,
+        ConstructorExcludes = 557752320,
+        MethodOrAccessorExcludes = 540975104,
+        PropertyExcludes = 536879104,
+        ClassExcludes = 536940544,
+        ModuleExcludes = 555888640,
         TypeExcludes = -2,
-        ObjectLiteralExcludes = 536922112,
-        ArrayLiteralOrCallOrNewExcludes = 536879104,
-        VariableDeclarationListExcludes = 537018368,
+        ObjectLiteralExcludes = 536973312,
+        ArrayLiteralOrCallOrNewExcludes = 536887296,
+        VariableDeclarationListExcludes = 537165824,
         ParameterExcludes = 536870912,
-        CatchClauseExcludes = 536887296,
-        BindingPatternExcludes = 536879104,
-        PropertyNamePropagatingFlags = 4096
+        CatchClauseExcludes = 536903680,
+        BindingPatternExcludes = 536887296,
+        PropertyNamePropagatingFlags = 8192
     }
     export interface SourceMapRange extends TextRange {
         source?: SourceMapSource;
@@ -5567,18 +5606,22 @@ declare module "typescript" {
         NeverApplyImportHelper = 67108864,
         IgnoreSourceNewlines = 134217728
     }
-    export interface EmitHelper {
+    export interface EmitHelperBase {
         readonly name: string;
         readonly scoped: boolean;
         readonly text: string | ((node: EmitHelperUniqueNameCallback) => string);
         readonly priority?: number;
         readonly dependencies?: EmitHelper[];
     }
-    export interface UnscopedEmitHelper extends EmitHelper {
+    export interface ScopedEmitHelper extends EmitHelperBase {
+        readonly scoped: true;
+    }
+    export interface UnscopedEmitHelper extends EmitHelperBase {
         readonly scoped: false;
         readonly importName?: string;
         readonly text: string;
     }
+    export type EmitHelper = ScopedEmitHelper | UnscopedEmitHelper;
     export type UniqueNameHandler = (baseName: string, checkFn?: (name: string) => boolean, optimistic?: boolean) => string;
     export type EmitHelperUniqueNameCallback = (name: string) => string;
     /**
@@ -5712,15 +5755,26 @@ declare module "typescript" {
         createIdentifier(text: string): Identifier;
         createIdentifier(text: string, typeArguments?: readonly (TypeNode | TypeParameterDeclaration)[], originalKeywordKind?: SyntaxKind): Identifier;
         updateIdentifier(node: Identifier, typeArguments: NodeArray<TypeNode | TypeParameterDeclaration> | undefined): Identifier;
-        /** Create a unique temporary variable. */
-        createTempVariable(recordTempVariable: ((node: Identifier) => void) | undefined): Identifier;
+        /**
+         * Create a unique temporary variable.
+         * @param recordTempVariable An optional callback used to record the temporary variable name. This
+         * should usually be a reference to `hoistVariableDeclaration` from a `TransformationContext`, but
+         * can be `undefined` if you plan to record the temporary variable manually.
+         * @param reservedInNestedScopes When `true`, reserves the temporary variable name in all nested scopes
+         * during emit so that the variable can be referenced in a nested function body. This is an alternative to
+         * setting `EmitFlags.ReuseTempVariableScope` on the nested function itself.
+         */
         createTempVariable(recordTempVariable: ((node: Identifier) => void) | undefined, reservedInNestedScopes?: boolean): Identifier;
-        /** Create a unique temporary variable for use in a loop. */
-        createLoopVariable(): Identifier;
+        /**
+         * Create a unique temporary variable for use in a loop.
+         * @param reservedInNestedScopes When `true`, reserves the temporary variable name in all nested scopes
+         * during emit so that the variable can be referenced in a nested function body. This is an alternative to
+         * setting `EmitFlags.ReuseTempVariableScope` on the nested function itself.
+         */
+        createLoopVariable(reservedInNestedScopes?: boolean): Identifier;
         /** Create a unique name based on the supplied text. */
         createUniqueName(text: string, flags?: GeneratedIdentifierFlags): Identifier;
         /** Create a unique name generated for a node. */
-        getGeneratedNameForNode(node: Node | undefined): Identifier;
         getGeneratedNameForNode(node: Node | undefined, flags?: GeneratedIdentifierFlags): Identifier;
         createPrivateIdentifier(text: string): PrivateIdentifier;
         createToken(token: SyntaxKind.SuperKeyword): SuperExpression;
@@ -5834,10 +5888,10 @@ declare module "typescript" {
         updateArrayLiteralExpression(node: ArrayLiteralExpression, elements: readonly Expression[]): ArrayLiteralExpression;
         createObjectLiteralExpression(properties?: readonly ObjectLiteralElementLike[], multiLine?: boolean): ObjectLiteralExpression;
         updateObjectLiteralExpression(node: ObjectLiteralExpression, properties: readonly ObjectLiteralElementLike[]): ObjectLiteralExpression;
-        createPropertyAccessExpression(expression: Expression, name: string | Identifier | PrivateIdentifier): PropertyAccessExpression;
-        updatePropertyAccessExpression(node: PropertyAccessExpression, expression: Expression, name: Identifier | PrivateIdentifier): PropertyAccessExpression;
-        createPropertyAccessChain(expression: Expression, questionDotToken: QuestionDotToken | undefined, name: string | Identifier | PrivateIdentifier): PropertyAccessChain;
-        updatePropertyAccessChain(node: PropertyAccessChain, expression: Expression, questionDotToken: QuestionDotToken | undefined, name: Identifier | PrivateIdentifier): PropertyAccessChain;
+        createPropertyAccessExpression(expression: Expression, name: string | MemberName): PropertyAccessExpression;
+        updatePropertyAccessExpression(node: PropertyAccessExpression, expression: Expression, name: MemberName): PropertyAccessExpression;
+        createPropertyAccessChain(expression: Expression, questionDotToken: QuestionDotToken | undefined, name: string | MemberName): PropertyAccessChain;
+        updatePropertyAccessChain(node: PropertyAccessChain, expression: Expression, questionDotToken: QuestionDotToken | undefined, name: MemberName): PropertyAccessChain;
         createElementAccessExpression(expression: Expression, index: number | Expression): ElementAccessExpression;
         updateElementAccessExpression(node: ElementAccessExpression, expression: Expression, argumentExpression: Expression): ElementAccessExpression;
         createElementAccessChain(expression: Expression, questionDotToken: QuestionDotToken | undefined, index: number | Expression): ElementAccessChain;
@@ -6009,52 +6063,58 @@ declare module "typescript" {
         updateJSDocTypeExpression(node: JSDocTypeExpression, type: TypeNode): JSDocTypeExpression;
         createJSDocNameReference(name: EntityName): JSDocNameReference;
         updateJSDocNameReference(node: JSDocNameReference, name: EntityName): JSDocNameReference;
+        createJSDocLink(name: EntityName | undefined, text: string): JSDocLink;
+        updateJSDocLink(node: JSDocLink, name: EntityName | undefined, text: string): JSDocLink;
         createJSDocTypeLiteral(jsDocPropertyTags?: readonly JSDocPropertyLikeTag[], isArrayType?: boolean): JSDocTypeLiteral;
         updateJSDocTypeLiteral(node: JSDocTypeLiteral, jsDocPropertyTags: readonly JSDocPropertyLikeTag[] | undefined, isArrayType: boolean | undefined): JSDocTypeLiteral;
         createJSDocSignature(typeParameters: readonly JSDocTemplateTag[] | undefined, parameters: readonly JSDocParameterTag[], type?: JSDocReturnTag): JSDocSignature;
         updateJSDocSignature(node: JSDocSignature, typeParameters: readonly JSDocTemplateTag[] | undefined, parameters: readonly JSDocParameterTag[], type: JSDocReturnTag | undefined): JSDocSignature;
-        createJSDocTemplateTag(tagName: Identifier | undefined, constraint: JSDocTypeExpression | undefined, typeParameters: readonly TypeParameterDeclaration[], comment?: string): JSDocTemplateTag;
-        updateJSDocTemplateTag(node: JSDocTemplateTag, tagName: Identifier | undefined, constraint: JSDocTypeExpression | undefined, typeParameters: readonly TypeParameterDeclaration[], comment: string | undefined): JSDocTemplateTag;
-        createJSDocTypedefTag(tagName: Identifier | undefined, typeExpression?: JSDocTypeExpression | JSDocTypeLiteral, fullName?: Identifier | JSDocNamespaceDeclaration, comment?: string): JSDocTypedefTag;
-        updateJSDocTypedefTag(node: JSDocTypedefTag, tagName: Identifier | undefined, typeExpression: JSDocTypeExpression | JSDocTypeLiteral | undefined, fullName: Identifier | JSDocNamespaceDeclaration | undefined, comment: string | undefined): JSDocTypedefTag;
-        createJSDocParameterTag(tagName: Identifier | undefined, name: EntityName, isBracketed: boolean, typeExpression?: JSDocTypeExpression, isNameFirst?: boolean, comment?: string): JSDocParameterTag;
-        updateJSDocParameterTag(node: JSDocParameterTag, tagName: Identifier | undefined, name: EntityName, isBracketed: boolean, typeExpression: JSDocTypeExpression | undefined, isNameFirst: boolean, comment: string | undefined): JSDocParameterTag;
-        createJSDocPropertyTag(tagName: Identifier | undefined, name: EntityName, isBracketed: boolean, typeExpression?: JSDocTypeExpression, isNameFirst?: boolean, comment?: string): JSDocPropertyTag;
-        updateJSDocPropertyTag(node: JSDocPropertyTag, tagName: Identifier | undefined, name: EntityName, isBracketed: boolean, typeExpression: JSDocTypeExpression | undefined, isNameFirst: boolean, comment: string | undefined): JSDocPropertyTag;
-        createJSDocTypeTag(tagName: Identifier | undefined, typeExpression: JSDocTypeExpression, comment?: string): JSDocTypeTag;
-        updateJSDocTypeTag(node: JSDocTypeTag, tagName: Identifier | undefined, typeExpression: JSDocTypeExpression, comment: string | undefined): JSDocTypeTag;
-        createJSDocSeeTag(tagName: Identifier | undefined, nameExpression: JSDocNameReference | undefined, comment?: string): JSDocSeeTag;
-        updateJSDocSeeTag(node: JSDocSeeTag, tagName: Identifier | undefined, nameExpression: JSDocNameReference | undefined, comment?: string): JSDocSeeTag;
-        createJSDocReturnTag(tagName: Identifier | undefined, typeExpression?: JSDocTypeExpression, comment?: string): JSDocReturnTag;
-        updateJSDocReturnTag(node: JSDocReturnTag, tagName: Identifier | undefined, typeExpression: JSDocTypeExpression | undefined, comment: string | undefined): JSDocReturnTag;
-        createJSDocThisTag(tagName: Identifier | undefined, typeExpression: JSDocTypeExpression, comment?: string): JSDocThisTag;
-        updateJSDocThisTag(node: JSDocThisTag, tagName: Identifier | undefined, typeExpression: JSDocTypeExpression | undefined, comment: string | undefined): JSDocThisTag;
-        createJSDocEnumTag(tagName: Identifier | undefined, typeExpression: JSDocTypeExpression, comment?: string): JSDocEnumTag;
-        updateJSDocEnumTag(node: JSDocEnumTag, tagName: Identifier | undefined, typeExpression: JSDocTypeExpression, comment: string | undefined): JSDocEnumTag;
-        createJSDocCallbackTag(tagName: Identifier | undefined, typeExpression: JSDocSignature, fullName?: Identifier | JSDocNamespaceDeclaration, comment?: string): JSDocCallbackTag;
-        updateJSDocCallbackTag(node: JSDocCallbackTag, tagName: Identifier | undefined, typeExpression: JSDocSignature, fullName: Identifier | JSDocNamespaceDeclaration | undefined, comment: string | undefined): JSDocCallbackTag;
-        createJSDocAugmentsTag(tagName: Identifier | undefined, className: JSDocAugmentsTag["class"], comment?: string): JSDocAugmentsTag;
-        updateJSDocAugmentsTag(node: JSDocAugmentsTag, tagName: Identifier | undefined, className: JSDocAugmentsTag["class"], comment: string | undefined): JSDocAugmentsTag;
-        createJSDocImplementsTag(tagName: Identifier | undefined, className: JSDocImplementsTag["class"], comment?: string): JSDocImplementsTag;
-        updateJSDocImplementsTag(node: JSDocImplementsTag, tagName: Identifier | undefined, className: JSDocImplementsTag["class"], comment: string | undefined): JSDocImplementsTag;
-        createJSDocAuthorTag(tagName: Identifier | undefined, comment?: string): JSDocAuthorTag;
-        updateJSDocAuthorTag(node: JSDocAuthorTag, tagName: Identifier | undefined, comment: string | undefined): JSDocAuthorTag;
-        createJSDocClassTag(tagName: Identifier | undefined, comment?: string): JSDocClassTag;
-        updateJSDocClassTag(node: JSDocClassTag, tagName: Identifier | undefined, comment: string | undefined): JSDocClassTag;
-        createJSDocPublicTag(tagName: Identifier | undefined, comment?: string): JSDocPublicTag;
-        updateJSDocPublicTag(node: JSDocPublicTag, tagName: Identifier | undefined, comment: string | undefined): JSDocPublicTag;
-        createJSDocPrivateTag(tagName: Identifier | undefined, comment?: string): JSDocPrivateTag;
-        updateJSDocPrivateTag(node: JSDocPrivateTag, tagName: Identifier | undefined, comment: string | undefined): JSDocPrivateTag;
-        createJSDocProtectedTag(tagName: Identifier | undefined, comment?: string): JSDocProtectedTag;
-        updateJSDocProtectedTag(node: JSDocProtectedTag, tagName: Identifier | undefined, comment: string | undefined): JSDocProtectedTag;
-        createJSDocReadonlyTag(tagName: Identifier | undefined, comment?: string): JSDocReadonlyTag;
-        updateJSDocReadonlyTag(node: JSDocReadonlyTag, tagName: Identifier | undefined, comment: string | undefined): JSDocReadonlyTag;
-        createJSDocUnknownTag(tagName: Identifier, comment?: string): JSDocUnknownTag;
-        updateJSDocUnknownTag(node: JSDocUnknownTag, tagName: Identifier, comment: string | undefined): JSDocUnknownTag;
-        createJSDocDeprecatedTag(tagName: Identifier, comment?: string): JSDocDeprecatedTag;
-        updateJSDocDeprecatedTag(node: JSDocDeprecatedTag, tagName: Identifier, comment?: string): JSDocDeprecatedTag;
-        createJSDocComment(comment?: string | undefined, tags?: readonly JSDocTag[] | undefined): JSDoc;
-        updateJSDocComment(node: JSDoc, comment: string | undefined, tags: readonly JSDocTag[] | undefined): JSDoc;
+        createJSDocTemplateTag(tagName: Identifier | undefined, constraint: JSDocTypeExpression | undefined, typeParameters: readonly TypeParameterDeclaration[], comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocTemplateTag;
+        updateJSDocTemplateTag(node: JSDocTemplateTag, tagName: Identifier | undefined, constraint: JSDocTypeExpression | undefined, typeParameters: readonly TypeParameterDeclaration[], comment: string | NodeArray<JSDocText | JSDocLink> | undefined): JSDocTemplateTag;
+        createJSDocTypedefTag(tagName: Identifier | undefined, typeExpression?: JSDocTypeExpression | JSDocTypeLiteral, fullName?: Identifier | JSDocNamespaceDeclaration, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocTypedefTag;
+        updateJSDocTypedefTag(node: JSDocTypedefTag, tagName: Identifier | undefined, typeExpression: JSDocTypeExpression | JSDocTypeLiteral | undefined, fullName: Identifier | JSDocNamespaceDeclaration | undefined, comment: string | NodeArray<JSDocText | JSDocLink> | undefined): JSDocTypedefTag;
+        createJSDocParameterTag(tagName: Identifier | undefined, name: EntityName, isBracketed: boolean, typeExpression?: JSDocTypeExpression, isNameFirst?: boolean, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocParameterTag;
+        updateJSDocParameterTag(node: JSDocParameterTag, tagName: Identifier | undefined, name: EntityName, isBracketed: boolean, typeExpression: JSDocTypeExpression | undefined, isNameFirst: boolean, comment: string | NodeArray<JSDocText | JSDocLink> | undefined): JSDocParameterTag;
+        createJSDocPropertyTag(tagName: Identifier | undefined, name: EntityName, isBracketed: boolean, typeExpression?: JSDocTypeExpression, isNameFirst?: boolean, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocPropertyTag;
+        updateJSDocPropertyTag(node: JSDocPropertyTag, tagName: Identifier | undefined, name: EntityName, isBracketed: boolean, typeExpression: JSDocTypeExpression | undefined, isNameFirst: boolean, comment: string | NodeArray<JSDocText | JSDocLink> | undefined): JSDocPropertyTag;
+        createJSDocTypeTag(tagName: Identifier | undefined, typeExpression: JSDocTypeExpression, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocTypeTag;
+        updateJSDocTypeTag(node: JSDocTypeTag, tagName: Identifier | undefined, typeExpression: JSDocTypeExpression, comment: string | NodeArray<JSDocText | JSDocLink> | undefined): JSDocTypeTag;
+        createJSDocSeeTag(tagName: Identifier | undefined, nameExpression: JSDocNameReference | undefined, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocSeeTag;
+        updateJSDocSeeTag(node: JSDocSeeTag, tagName: Identifier | undefined, nameExpression: JSDocNameReference | undefined, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocSeeTag;
+        createJSDocReturnTag(tagName: Identifier | undefined, typeExpression?: JSDocTypeExpression, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocReturnTag;
+        updateJSDocReturnTag(node: JSDocReturnTag, tagName: Identifier | undefined, typeExpression: JSDocTypeExpression | undefined, comment: string | NodeArray<JSDocText | JSDocLink> | undefined): JSDocReturnTag;
+        createJSDocThisTag(tagName: Identifier | undefined, typeExpression: JSDocTypeExpression, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocThisTag;
+        updateJSDocThisTag(node: JSDocThisTag, tagName: Identifier | undefined, typeExpression: JSDocTypeExpression | undefined, comment: string | NodeArray<JSDocText | JSDocLink> | undefined): JSDocThisTag;
+        createJSDocEnumTag(tagName: Identifier | undefined, typeExpression: JSDocTypeExpression, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocEnumTag;
+        updateJSDocEnumTag(node: JSDocEnumTag, tagName: Identifier | undefined, typeExpression: JSDocTypeExpression, comment: string | NodeArray<JSDocText | JSDocLink> | undefined): JSDocEnumTag;
+        createJSDocCallbackTag(tagName: Identifier | undefined, typeExpression: JSDocSignature, fullName?: Identifier | JSDocNamespaceDeclaration, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocCallbackTag;
+        updateJSDocCallbackTag(node: JSDocCallbackTag, tagName: Identifier | undefined, typeExpression: JSDocSignature, fullName: Identifier | JSDocNamespaceDeclaration | undefined, comment: string | NodeArray<JSDocText | JSDocLink> | undefined): JSDocCallbackTag;
+        createJSDocAugmentsTag(tagName: Identifier | undefined, className: JSDocAugmentsTag["class"], comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocAugmentsTag;
+        updateJSDocAugmentsTag(node: JSDocAugmentsTag, tagName: Identifier | undefined, className: JSDocAugmentsTag["class"], comment: string | NodeArray<JSDocText | JSDocLink> | undefined): JSDocAugmentsTag;
+        createJSDocImplementsTag(tagName: Identifier | undefined, className: JSDocImplementsTag["class"], comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocImplementsTag;
+        updateJSDocImplementsTag(node: JSDocImplementsTag, tagName: Identifier | undefined, className: JSDocImplementsTag["class"], comment: string | NodeArray<JSDocText | JSDocLink> | undefined): JSDocImplementsTag;
+        createJSDocAuthorTag(tagName: Identifier | undefined, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocAuthorTag;
+        updateJSDocAuthorTag(node: JSDocAuthorTag, tagName: Identifier | undefined, comment: string | NodeArray<JSDocText | JSDocLink> | undefined): JSDocAuthorTag;
+        createJSDocClassTag(tagName: Identifier | undefined, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocClassTag;
+        updateJSDocClassTag(node: JSDocClassTag, tagName: Identifier | undefined, comment: string | NodeArray<JSDocText | JSDocLink> | undefined): JSDocClassTag;
+        createJSDocPublicTag(tagName: Identifier | undefined, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocPublicTag;
+        updateJSDocPublicTag(node: JSDocPublicTag, tagName: Identifier | undefined, comment: string | NodeArray<JSDocText | JSDocLink> | undefined): JSDocPublicTag;
+        createJSDocPrivateTag(tagName: Identifier | undefined, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocPrivateTag;
+        updateJSDocPrivateTag(node: JSDocPrivateTag, tagName: Identifier | undefined, comment: string | NodeArray<JSDocText | JSDocLink> | undefined): JSDocPrivateTag;
+        createJSDocProtectedTag(tagName: Identifier | undefined, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocProtectedTag;
+        updateJSDocProtectedTag(node: JSDocProtectedTag, tagName: Identifier | undefined, comment: string | NodeArray<JSDocText | JSDocLink> | undefined): JSDocProtectedTag;
+        createJSDocReadonlyTag(tagName: Identifier | undefined, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocReadonlyTag;
+        updateJSDocReadonlyTag(node: JSDocReadonlyTag, tagName: Identifier | undefined, comment: string | NodeArray<JSDocText | JSDocLink> | undefined): JSDocReadonlyTag;
+        createJSDocUnknownTag(tagName: Identifier, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocUnknownTag;
+        updateJSDocUnknownTag(node: JSDocUnknownTag, tagName: Identifier, comment: string | NodeArray<JSDocText | JSDocLink> | undefined): JSDocUnknownTag;
+        createJSDocDeprecatedTag(tagName: Identifier, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocDeprecatedTag;
+        updateJSDocDeprecatedTag(node: JSDocDeprecatedTag, tagName: Identifier, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocDeprecatedTag;
+        createJSDocOverrideTag(tagName: Identifier, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocOverrideTag;
+        updateJSDocOverrideTag(node: JSDocOverrideTag, tagName: Identifier, comment?: string | NodeArray<JSDocText | JSDocLink>): JSDocOverrideTag;
+        createJSDocText(text: string): JSDocText;
+        updateJSDocText(node: JSDocText, text: string): JSDocText;
+        createJSDocComment(comment?: string | NodeArray<JSDocText | JSDocLink> | undefined, tags?: readonly JSDocTag[] | undefined): JSDoc;
+        updateJSDocComment(node: JSDoc, comment: string | NodeArray<JSDocText | JSDocLink> | undefined, tags: readonly JSDocTag[] | undefined): JSDoc;
         createJsxElement(openingElement: JsxOpeningElement, children: readonly JsxChild[], closingElement: JsxClosingElement): JsxElement;
         updateJsxElement(node: JsxElement, openingElement: JsxOpeningElement, children: readonly JsxChild[], closingElement: JsxClosingElement): JsxElement;
         createJsxSelfClosingElement(tagName: JsxTagNameExpression, typeArguments: readonly TypeNode[] | undefined, attributes: JsxAttributes): JsxSelfClosingElement;
@@ -6207,7 +6267,7 @@ declare module "typescript" {
          * @param allowComments A value indicating whether comments may be emitted for the name.
          * @param allowSourceMaps A value indicating whether source maps may be emitted for the name.
          */
-        getDeclarationName(node: Declaration, allowComments?: boolean, allowSourceMaps?: boolean): Identifier;
+        getDeclarationName(node: Declaration | undefined, allowComments?: boolean, allowSourceMaps?: boolean): Identifier;
         /**
          * Gets a namespace-qualified name for use in expressions.
          *
@@ -6298,6 +6358,9 @@ declare module "typescript" {
         hoistFunctionDeclaration(node: FunctionDeclaration): void;
         /** Hoists a variable declaration to the containing scope. */
         hoistVariableDeclaration(node: Identifier): void;
+        startBlockScope(): void;
+        endBlockScope(): Statement[] | undefined;
+        addBlockScopedVariable(node: Identifier): void;
         /** Adds an initialization statement to the top of the lexical environment. */
         addInitializationStatement(node: Statement): void;
     }
@@ -6521,12 +6584,12 @@ declare module "typescript" {
          * });
          * ```
          */
-        onEmitNode?(hint: EmitHint, node: Node | undefined, emitCallback: (hint: EmitHint, node: Node | undefined) => void): void;
+        onEmitNode?(hint: EmitHint, node: Node, emitCallback: (hint: EmitHint, node: Node) => void): void;
         /**
          * A hook used to check if an emit notification is required for a node.
          * @param node The node to emit.
          */
-        isEmitNotificationEnabled?(node: Node | undefined): boolean;
+        isEmitNotificationEnabled?(node: Node): boolean;
         /**
          * A hook used by the Printer to perform just-in-time substitution of a node. This is
          * primarily used by node transformations that need to substitute one node for another,
@@ -6548,6 +6611,8 @@ declare module "typescript" {
         onEmitSourceMapOfToken?: (node: Node | undefined, token: SyntaxKind, writer: (s: string) => void, pos: number, emitCallback: (token: SyntaxKind, writer: (s: string) => void, pos: number) => number) => number;
         onEmitSourceMapOfPosition?: (pos: number) => void;
         onSetSourceFile?: (node: SourceFile) => void;
+        onBeforeEmitNode?: (node: Node | undefined) => void;
+        onAfterEmitNode?: (node: Node | undefined) => void;
         onBeforeEmitNodeArray?: (nodes: NodeArray<any> | undefined) => void;
         onAfterEmitNodeArray?: (nodes: NodeArray<any> | undefined) => void;
         onBeforeEmitToken?: (node: Node) => void;
@@ -6664,6 +6729,7 @@ declare module "typescript" {
         readFile?(path: string): string | undefined;
         realpath?(path: string): string;
         getSymlinkCache?(): SymlinkCache;
+        getModuleSpecifierCache?(): ModuleSpecifierCache;
         getGlobalTypingsCacheLocation?(): string | undefined;
         getNearestAncestorDirectoryWithPackageJson?(fileName: string, rootDir?: string): string | undefined;
         getSourceFiles(): readonly SourceFile[];
@@ -6671,6 +6737,17 @@ declare module "typescript" {
         getProjectReferenceRedirect(fileName: string): string | undefined;
         isSourceOfProjectReferenceRedirect(fileName: string): boolean;
         getFileIncludeReasons(): MultiMap<Path, FileIncludeReason>;
+    }
+    export interface ModulePath {
+        path: string;
+        isInNodeModules: boolean;
+        isRedirect: boolean;
+    }
+    export interface ModuleSpecifierCache {
+        get(fromFileName: Path, toFileName: Path): boolean | readonly ModulePath[] | undefined;
+        set(fromFileName: Path, toFileName: Path, moduleSpecifiers: boolean | readonly ModulePath[]): void;
+        clear(): void;
+        count(): number;
     }
     export interface SymbolTracker {
         trackSymbol?(symbol: Symbol, enclosingDeclaration: Node | undefined, meaning: SymbolFlags): void;
@@ -6965,6 +7042,8 @@ declare module "typescript" {
         readonly disableSuggestions?: boolean;
         readonly quotePreference?: "auto" | "double" | "single";
         readonly includeCompletionsForModuleExports?: boolean;
+        readonly includeCompletionsForImportStatements?: boolean;
+        readonly includeCompletionsWithSnippetText?: boolean;
         readonly includeAutomaticOptionalChainCompletions?: boolean;
         readonly includeCompletionsWithInsertText?: boolean;
         readonly importModuleSpecifierPreference?: "shortest" | "project-relative" | "relative" | "non-relative";
@@ -7405,6 +7484,9 @@ declare module "typescript" {
     export type HostWatchFile = (fileName: string, callback: FileWatcherCallback, pollingInterval: PollingInterval, options: WatchOptions | undefined) => FileWatcher;
     export type HostWatchDirectory = (fileName: string, callback: DirectoryWatcherCallback, recursive: boolean, options: WatchOptions | undefined) => FileWatcher;
     export const missingFileModifiedTime: Date;
+    export function getModifiedTime(host: {
+        getModifiedTime: NonNullable<System["getModifiedTime"]>;
+    }, fileName: string): Date;
     export let unchangedPollThresholds: {
         250: number;
         500: number;
@@ -7463,8 +7545,9 @@ declare module "typescript" {
         tscWatchFile: string | undefined;
         useNonPollingWatchers?: boolean;
         tscWatchDirectory: string | undefined;
+        defaultWatchFileKind: System["defaultWatchFileKind"];
     }
-    export function createSystemWatchFunctions({ pollingWatchFile, getModifiedTime, setTimeout, clearTimeout, fsWatch, fileExists, useCaseSensitiveFileNames, getCurrentDirectory, fsSupportsRecursiveFsWatch, directoryExists, getAccessibleSortedChildDirectories, realpath, tscWatchFile, useNonPollingWatchers, tscWatchDirectory, }: CreateSystemWatchFunctions): {
+    export function createSystemWatchFunctions({ pollingWatchFile, getModifiedTime, setTimeout, clearTimeout, fsWatch, fileExists, useCaseSensitiveFileNames, getCurrentDirectory, fsSupportsRecursiveFsWatch, directoryExists, getAccessibleSortedChildDirectories, realpath, tscWatchFile, useNonPollingWatchers, tscWatchDirectory, defaultWatchFileKind, }: CreateSystemWatchFunctions): {
         watchFile: HostWatchFile;
         watchDirectory: HostWatchDirectory;
     };
@@ -7598,7 +7681,9 @@ declare module "typescript" {
         base64encode?(input: string): string;
         bufferFrom?(input: string, encoding?: string): Buffer;
         now?(): Date;
+        disableUseFileVersionAsSignature?: boolean;
         require?(baseDir: string, moduleName: string): RequireResult;
+        defaultWatchFileKind?(): WatchFileKind | undefined;
     }
     export interface FileWatcher {
         close(): void;
@@ -7613,7 +7698,7 @@ declare module "typescript" {
         Identifier_expected: DiagnosticMessage;
         _0_expected: DiagnosticMessage;
         A_file_cannot_have_a_reference_to_itself: DiagnosticMessage;
-        The_parser_expected_to_find_a_to_match_the_token_here: DiagnosticMessage;
+        The_parser_expected_to_find_a_1_to_match_the_0_token_here: DiagnosticMessage;
         Trailing_comma_not_allowed: DiagnosticMessage;
         Asterisk_Slash_expected: DiagnosticMessage;
         An_element_access_expression_should_take_an_argument: DiagnosticMessage;
@@ -7735,7 +7820,7 @@ declare module "typescript" {
         A_yield_expression_is_only_allowed_in_a_generator_body: DiagnosticMessage;
         Computed_property_names_are_not_allowed_in_enums: DiagnosticMessage;
         A_computed_property_name_in_an_ambient_context_must_refer_to_an_expression_whose_type_is_a_literal_type_or_a_unique_symbol_type: DiagnosticMessage;
-        A_computed_property_name_in_a_class_property_declaration_must_refer_to_an_expression_whose_type_is_a_literal_type_or_a_unique_symbol_type: DiagnosticMessage;
+        A_computed_property_name_in_a_class_property_declaration_must_have_a_simple_literal_type_or_a_unique_symbol_type: DiagnosticMessage;
         A_computed_property_name_in_a_method_overload_must_refer_to_an_expression_whose_type_is_a_literal_type_or_a_unique_symbol_type: DiagnosticMessage;
         A_computed_property_name_in_an_interface_must_refer_to_an_expression_whose_type_is_a_literal_type_or_a_unique_symbol_type: DiagnosticMessage;
         A_computed_property_name_in_a_type_literal_must_refer_to_an_expression_whose_type_is_a_literal_type_or_a_unique_symbol_type: DiagnosticMessage;
@@ -8034,8 +8119,7 @@ declare module "typescript" {
         A_super_call_must_be_the_first_statement_in_the_constructor_when_a_class_contains_initialized_properties_parameter_properties_or_private_identifiers: DiagnosticMessage;
         Constructors_for_derived_classes_must_contain_a_super_call: DiagnosticMessage;
         A_get_accessor_must_return_a_value: DiagnosticMessage;
-        Getter_and_setter_accessors_do_not_agree_in_visibility: DiagnosticMessage;
-        get_and_set_accessor_must_have_the_same_type: DiagnosticMessage;
+        The_return_type_of_a_get_accessor_must_be_assignable_to_its_set_accessor_type: DiagnosticMessage;
         A_signature_with_an_implementation_cannot_use_a_string_literal_type: DiagnosticMessage;
         Specialized_overload_signature_is_not_assignable_to_any_non_specialized_signature: DiagnosticMessage;
         Overload_signatures_must_all_be_exported_or_non_exported: DiagnosticMessage;
@@ -8098,7 +8182,7 @@ declare module "typescript" {
         Property_0_is_protected_but_type_1_is_not_a_class_derived_from_2: DiagnosticMessage;
         Property_0_is_protected_in_type_1_but_public_in_type_2: DiagnosticMessage;
         Property_0_is_protected_and_only_accessible_within_class_1_and_its_subclasses: DiagnosticMessage;
-        Property_0_is_protected_and_only_accessible_through_an_instance_of_class_1: DiagnosticMessage;
+        Property_0_is_protected_and_only_accessible_through_an_instance_of_class_1_This_is_an_instance_of_class_2: DiagnosticMessage;
         The_0_operator_is_not_allowed_for_boolean_types_Consider_using_1_instead: DiagnosticMessage;
         Block_scoped_variable_0_used_before_its_declaration: DiagnosticMessage;
         Class_0_used_before_its_declaration: DiagnosticMessage;
@@ -8271,6 +8355,12 @@ declare module "typescript" {
         Variadic_element_at_position_0_in_source_does_not_match_element_at_position_1_in_target: DiagnosticMessage;
         Type_at_position_0_in_source_is_not_compatible_with_type_at_position_1_in_target: DiagnosticMessage;
         Type_at_positions_0_through_1_in_source_is_not_compatible_with_type_at_position_2_in_target: DiagnosticMessage;
+        Cannot_assign_to_0_because_it_is_an_enum: DiagnosticMessage;
+        Cannot_assign_to_0_because_it_is_a_class: DiagnosticMessage;
+        Cannot_assign_to_0_because_it_is_a_function: DiagnosticMessage;
+        Cannot_assign_to_0_because_it_is_a_namespace: DiagnosticMessage;
+        Cannot_assign_to_0_because_it_is_an_import: DiagnosticMessage;
+        JSX_property_access_expressions_cannot_include_JSX_namespace_names: DiagnosticMessage;
         Cannot_augment_module_0_with_value_exports_because_it_resolves_to_a_non_module_entity: DiagnosticMessage;
         A_member_initializer_in_a_enum_declaration_cannot_reference_members_declared_after_it_including_members_defined_in_other_enums: DiagnosticMessage;
         Merged_declaration_0_cannot_include_a_default_export_declaration_Consider_adding_a_separate_export_default_0_declaration_instead: DiagnosticMessage;
@@ -8394,7 +8484,7 @@ declare module "typescript" {
         The_last_overload_is_declared_here: DiagnosticMessage;
         Overload_0_of_1_2_gave_the_following_error: DiagnosticMessage;
         Did_you_forget_to_use_await: DiagnosticMessage;
-        This_condition_will_always_return_true_since_the_function_is_always_defined_Did_you_mean_to_call_it_instead: DiagnosticMessage;
+        This_condition_will_always_return_true_since_this_function_appears_to_always_be_defined_Did_you_mean_to_call_it_instead: DiagnosticMessage;
         Assertions_require_every_name_in_the_call_target_to_be_declared_with_an_explicit_type_annotation: DiagnosticMessage;
         Assertions_require_the_call_target_to_be_an_identifier_or_qualified_name: DiagnosticMessage;
         The_operand_of_an_increment_or_decrement_operator_may_not_be_an_optional_property_access: DiagnosticMessage;
@@ -8421,6 +8511,15 @@ declare module "typescript" {
         The_declaration_was_marked_as_deprecated_here: DiagnosticMessage;
         Type_produces_a_tuple_type_that_is_too_large_to_represent: DiagnosticMessage;
         Expression_produces_a_tuple_type_that_is_too_large_to_represent: DiagnosticMessage;
+        This_condition_will_always_return_true_since_this_0_appears_to_always_be_defined: DiagnosticMessage;
+        Type_0_can_only_be_iterated_through_when_using_the_downlevelIteration_flag_or_with_a_target_of_es2015_or_higher: DiagnosticMessage;
+        Cannot_assign_to_private_method_0_Private_methods_are_not_writable: DiagnosticMessage;
+        Duplicate_identifier_0_Static_and_instance_elements_cannot_share_the_same_private_name: DiagnosticMessage;
+        Static_fields_with_private_names_can_t_have_initializers_when_the_useDefineForClassFields_flag_is_not_specified_with_a_target_of_esnext_Consider_adding_the_useDefineForClassFields_flag: DiagnosticMessage;
+        Private_accessor_was_defined_without_a_getter: DiagnosticMessage;
+        This_syntax_requires_an_imported_helper_named_1_with_2_parameters_which_is_not_compatible_with_the_one_in_0_Consider_upgrading_your_version_of_0: DiagnosticMessage;
+        A_get_accessor_must_be_at_least_as_accessible_as_the_setter: DiagnosticMessage;
+        Declaration_or_statement_expected_This_follows_a_block_of_statements_so_if_you_intended_to_write_a_destructuring_assignment_you_might_need_to_wrap_the_the_whole_assignment_in_parentheses: DiagnosticMessage;
         Import_declaration_0_is_using_private_name_1: DiagnosticMessage;
         Type_parameter_0_of_exported_class_has_or_is_using_private_name_1: DiagnosticMessage;
         Type_parameter_0_of_exported_interface_has_or_is_using_private_name_1: DiagnosticMessage;
@@ -8515,6 +8614,11 @@ declare module "typescript" {
         Type_arguments_for_0_circularly_reference_themselves: DiagnosticMessage;
         Tuple_type_arguments_circularly_reference_themselves: DiagnosticMessage;
         Property_0_comes_from_an_index_signature_so_it_must_be_accessed_with_0: DiagnosticMessage;
+        This_member_cannot_have_an_override_modifier_because_its_containing_class_0_does_not_extend_another_class: DiagnosticMessage;
+        This_member_cannot_have_an_override_modifier_because_it_is_not_declared_in_the_base_class_0: DiagnosticMessage;
+        This_member_must_have_an_override_modifier_because_it_overrides_a_member_in_the_base_class_0: DiagnosticMessage;
+        This_parameter_property_must_be_rewritten_as_a_property_declaration_with_an_override_modifier_because_it_overrides_a_member_in_base_class_0: DiagnosticMessage;
+        This_member_must_have_an_override_modifier_because_it_overrides_an_abstract_method_that_is_declared_in_the_base_class_0: DiagnosticMessage;
         The_current_host_does_not_support_the_0_option: DiagnosticMessage;
         Cannot_find_the_common_subdirectory_path_for_the_input_files: DiagnosticMessage;
         File_specification_cannot_end_in_a_recursive_directory_wildcard_Asterisk_Asterisk_Colon_0: DiagnosticMessage;
@@ -8567,6 +8671,7 @@ declare module "typescript" {
         Option_0_cannot_be_specified_when_option_jsx_is_1: DiagnosticMessage;
         Non_relative_paths_are_not_allowed_when_baseUrl_is_not_set_Did_you_forget_a_leading_Slash: DiagnosticMessage;
         Option_preserveConstEnums_cannot_be_disabled_when_isolatedModules_is_enabled: DiagnosticMessage;
+        The_root_value_of_a_0_file_must_be_an_object: DiagnosticMessage;
         Generates_a_sourcemap_for_each_corresponding_d_ts_file: DiagnosticMessage;
         Concatenate_and_emit_output_to_single_file: DiagnosticMessage;
         Generates_corresponding_d_ts_file: DiagnosticMessage;
@@ -8582,7 +8687,7 @@ declare module "typescript" {
         Skip_type_checking_of_declaration_files: DiagnosticMessage;
         Do_not_resolve_the_real_path_of_symlinks: DiagnosticMessage;
         Only_emit_d_ts_declaration_files: DiagnosticMessage;
-        Specify_ECMAScript_target_version_Colon_ES3_default_ES5_ES2015_ES2016_ES2017_ES2018_ES2019_ES2020_or_ESNEXT: DiagnosticMessage;
+        Specify_ECMAScript_target_version_Colon_ES3_default_ES5_ES2015_ES2016_ES2017_ES2018_ES2019_ES2020_ES2021_or_ESNEXT: DiagnosticMessage;
         Specify_module_code_generation_Colon_none_commonjs_amd_system_umd_es2015_es2020_or_ESNext: DiagnosticMessage;
         Print_this_message: DiagnosticMessage;
         Print_the_compiler_s_version: DiagnosticMessage;
@@ -8777,9 +8882,9 @@ declare module "typescript" {
         Emit_class_fields_with_Define_instead_of_Set: DiagnosticMessage;
         Generates_a_CPU_profile: DiagnosticMessage;
         Disable_solution_searching_for_this_project: DiagnosticMessage;
-        Specify_strategy_for_watching_file_Colon_FixedPollingInterval_default_PriorityPollingInterval_DynamicPriorityPolling_UseFsEvents_UseFsEventsOnParentDirectory: DiagnosticMessage;
-        Specify_strategy_for_watching_directory_on_platforms_that_don_t_support_recursive_watching_natively_Colon_UseFsEvents_default_FixedPollingInterval_DynamicPriorityPolling: DiagnosticMessage;
-        Specify_strategy_for_creating_a_polling_watch_when_it_fails_to_create_using_file_system_events_Colon_FixedInterval_default_PriorityInterval_DynamicPriority: DiagnosticMessage;
+        Specify_strategy_for_watching_file_Colon_FixedPollingInterval_default_PriorityPollingInterval_DynamicPriorityPolling_FixedChunkSizePolling_UseFsEvents_UseFsEventsOnParentDirectory: DiagnosticMessage;
+        Specify_strategy_for_watching_directory_on_platforms_that_don_t_support_recursive_watching_natively_Colon_UseFsEvents_default_FixedPollingInterval_DynamicPriorityPolling_FixedChunkSizePolling: DiagnosticMessage;
+        Specify_strategy_for_creating_a_polling_watch_when_it_fails_to_create_using_file_system_events_Colon_FixedInterval_default_PriorityInterval_DynamicPriority_FixedChunkSize: DiagnosticMessage;
         Synchronously_call_callbacks_and_update_the_state_of_directory_watchers_on_platforms_that_don_t_support_recursive_watching_natively: DiagnosticMessage;
         Tag_0_expects_at_least_1_arguments_but_the_JSX_factory_2_provides_at_most_3: DiagnosticMessage;
         Option_0_can_only_be_specified_in_tsconfig_json_file_or_set_to_false_or_null_on_command_line: DiagnosticMessage;
@@ -8844,8 +8949,9 @@ declare module "typescript" {
         Print_names_of_files_that_are_part_of_the_compilation_and_then_stop_processing: DiagnosticMessage;
         File_0_is_a_JavaScript_file_Did_you_mean_to_enable_the_allowJs_option: DiagnosticMessage;
         Print_names_of_files_and_the_reason_they_are_part_of_the_compilation: DiagnosticMessage;
-        Require_undeclared_properties_from_index_signatures_to_use_element_accesses: DiagnosticMessage;
         Include_undefined_in_index_signature_results: DiagnosticMessage;
+        Ensure_overriding_members_in_derived_classes_are_marked_with_an_override_modifier: DiagnosticMessage;
+        Require_undeclared_properties_from_index_signatures_to_use_element_accesses: DiagnosticMessage;
         Variable_0_implicitly_has_an_1_type: DiagnosticMessage;
         Parameter_0_implicitly_has_an_1_type: DiagnosticMessage;
         Member_0_implicitly_has_an_1_type: DiagnosticMessage;
@@ -9163,6 +9269,10 @@ declare module "typescript" {
         Add_all_missing_function_declarations: DiagnosticMessage;
         Method_not_implemented: DiagnosticMessage;
         Function_not_implemented: DiagnosticMessage;
+        Add_override_modifier: DiagnosticMessage;
+        Remove_override_modifier: DiagnosticMessage;
+        Add_all_missing_override_modifiers: DiagnosticMessage;
+        Remove_all_unnecessary_override_modifiers: DiagnosticMessage;
         No_value_exists_in_scope_for_the_shorthand_property_0_Either_declare_one_or_provide_an_initializer: DiagnosticMessage;
         Classes_may_not_have_a_field_named_constructor: DiagnosticMessage;
         JSX_expressions_may_not_use_the_comma_operator_Did_you_mean_to_write_an_array: DiagnosticMessage;
@@ -9177,8 +9287,6 @@ declare module "typescript" {
         The_shadowing_declaration_of_0_is_defined_here: DiagnosticMessage;
         The_declaration_of_0_that_you_probably_intended_to_use_is_defined_here: DiagnosticMessage;
         _0_modifier_cannot_be_used_with_a_private_identifier: DiagnosticMessage;
-        A_method_cannot_be_named_with_a_private_identifier: DiagnosticMessage;
-        An_accessor_cannot_be_named_with_a_private_identifier: DiagnosticMessage;
         An_enum_member_cannot_be_named_with_a_private_identifier: DiagnosticMessage;
         can_only_be_used_at_the_start_of_a_file: DiagnosticMessage;
         Compiler_reserves_name_0_when_emitting_private_identifier_downlevel: DiagnosticMessage;
@@ -9190,6 +9298,7 @@ declare module "typescript" {
         Only_numeric_enums_can_have_computed_members_but_this_expression_has_type_0_If_you_do_not_need_exhaustiveness_checks_consider_using_an_object_literal_instead: DiagnosticMessage;
         Specify_the_JSX_fragment_factory_function_to_use_when_targeting_react_JSX_emit_with_jsxFactory_compiler_option_is_specified_e_g_Fragment: DiagnosticMessage;
         Invalid_value_for_jsxFragmentFactory_0_is_not_a_valid_identifier_or_qualified_name: DiagnosticMessage;
+        Class_decorators_can_t_be_used_with_static_private_identifier_Consider_removing_the_experimental_decorator: DiagnosticMessage;
     };
 }
 declare module "typescript" {
@@ -9221,7 +9330,7 @@ declare module "typescript" {
         scanJsxIdentifier(): SyntaxKind;
         scanJsxAttributeValue(): SyntaxKind;
         reScanJsxAttributeValue(): SyntaxKind;
-        reScanJsxToken(): JsxTokenSyntaxKind;
+        reScanJsxToken(allowMultilineJsxText?: boolean): JsxTokenSyntaxKind;
         reScanLessThanToken(): SyntaxKind;
         reScanQuestionToken(): SyntaxKind;
         reScanInvalidIdentifier(): SyntaxKind;
@@ -9389,7 +9498,7 @@ declare module "typescript" {
     };
     /** @internal */
     function getNonAssignedNameOfDeclaration(declaration: Declaration | Expression): DeclarationName | undefined;
-    function getNameOfDeclaration(declaration: Declaration | Expression): DeclarationName | undefined;
+    function getNameOfDeclaration(declaration: Declaration | Expression | undefined): DeclarationName | undefined;
     function getAssignedName(node: Node): DeclarationName | undefined;
     /**
      * Gets the JSDoc parameter tags for the node if present.
@@ -9442,6 +9551,7 @@ declare module "typescript" {
     /** Gets the JSDoc protected tag for the node if present */
     function getJSDocReadonlyTag(node: Node): JSDocReadonlyTag | undefined;
     function getJSDocReadonlyTagNoCache(node: Node): JSDocReadonlyTag | undefined;
+    function getJSDocOverrideTagNoCache(node: Node): JSDocOverrideTag | undefined;
     /** Gets the JSDoc deprecated tag for the node if present */
     function getJSDocDeprecatedTag(node: Node): JSDocDeprecatedTag | undefined;
     function getJSDocDeprecatedTagNoCache(node: Node): JSDocDeprecatedTag | undefined;
@@ -9481,13 +9591,15 @@ declare module "typescript" {
     function getAllJSDocTags<T extends JSDocTag>(node: Node, predicate: (tag: JSDocTag) => tag is T): readonly T[];
     /** Gets all JSDoc tags of a specified kind */
     function getAllJSDocTagsOfKind(node: Node, kind: SyntaxKind): readonly JSDocTag[];
+    /** Gets the text of a jsdoc comment, flattening links to their text. */
+    function getTextOfJSDocComment(comment?: string | NodeArray<JSDocText | JSDocLink>): string | undefined;
     /**
      * Gets the effective type parameters. If the node was parsed in a
      * JavaScript file, gets the type parameters from the `@template` tag from JSDoc.
      */
     function getEffectiveTypeParameterDeclarations(node: DeclarationWithTypeParameters): readonly TypeParameterDeclaration[];
     function getEffectiveConstraintOfTypeParameter(node: TypeParameterDeclaration): TypeNode | undefined;
-    function isIdentifierOrPrivateIdentifier(node: Node): node is Identifier | PrivateIdentifier;
+    function isMemberName(node: Node): node is MemberName;
     function isGetOrSetAccessorDeclaration(node: Node): node is AccessorDeclaration;
     function isPropertyAccessChain(node: Node): node is PropertyAccessChain;
     function isElementAccessChain(node: Node): node is ElementAccessChain;
@@ -9525,6 +9637,12 @@ declare module "typescript" {
     function isNode(node: Node): boolean;
     function isNodeKind(kind: SyntaxKind): boolean;
     /**
+     * True if kind is of some token syntax kind.
+     * For example, this is true for an IfKeyword but not for an IfStatement.
+     * Literals are considered tokens, except TemplateLiteral, but does include TemplateHead/Middle/Tail.
+     */
+    function isTokenKind(kind: SyntaxKind): boolean;
+    /**
      * True if node is of some token syntax kind.
      * For example, this is true for an IfKeyword but not for an IfStatement.
      * Literals are considered tokens, except TemplateLiteral, but does include TemplateHead/Middle/Tail.
@@ -9540,7 +9658,7 @@ declare module "typescript" {
     function isTypeOnlyImportOrExportDeclaration(node: Node): node is TypeOnlyCompatibleAliasDeclaration;
     function isStringTextContainingNode(node: Node): node is StringLiteral | TemplateLiteralToken;
     function isGeneratedIdentifier(node: Node): node is GeneratedIdentifier;
-    function isPrivateIdentifierPropertyDeclaration(node: Node): node is PrivateIdentifierPropertyDeclaration;
+    function isPrivateIdentifierClassElementDeclaration(node: Node): node is PrivateClassElementDeclaration;
     function isPrivateIdentifierPropertyAccessExpression(node: Node): node is PrivateIdentifierPropertyAccessExpression;
     function isModifierKind(token: SyntaxKind): token is Modifier["kind"];
     function isParameterPropertyModifier(kind: SyntaxKind): boolean;
@@ -9549,7 +9667,7 @@ declare module "typescript" {
     function isEntityName(node: Node): node is EntityName;
     function isPropertyName(node: Node): node is PropertyName;
     function isBindingName(node: Node): node is BindingName;
-    function isFunctionLike(node: Node): node is SignatureDeclaration;
+    function isFunctionLike(node: Node | undefined): node is SignatureDeclaration;
     function isFunctionLikeDeclaration(node: Node): node is FunctionLikeDeclaration;
     function isFunctionLikeKind(kind: SyntaxKind): boolean;
     function isFunctionOrModuleBlock(node: Node): boolean;
@@ -9876,6 +9994,7 @@ declare module "typescript" {
      */
     export function isThisProperty(node: Node): boolean;
     export function isThisInitializedDeclaration(node: Node | undefined): boolean;
+    export function isThisInitializedObjectBindingExpression(node: Node | undefined): boolean;
     export function getEntityNameFromTypeNode(node: TypeNode): EntityNameOrEntityNameExpression | undefined;
     export function getInvokedExpression(node: CallLikeExpression): Expression;
     export function nodeCanBeDecorated(node: ClassDeclaration): true;
@@ -9922,9 +10041,8 @@ declare module "typescript" {
      * Returns true if the node is a VariableDeclaration initialized to a require call (see `isRequireCall`).
      * This function does not test if the node is in a JavaScript file or not.
      */
-    export function isRequireVariableDeclaration(node: Node, requireStringLiteralLikeArgument: true): node is RequireVariableDeclaration;
-    export function isRequireVariableDeclaration(node: Node, requireStringLiteralLikeArgument: boolean): node is VariableDeclaration;
-    export function isRequireVariableStatement(node: Node, requireStringLiteralLikeArgument?: boolean): node is RequireVariableStatement;
+    export function isRequireVariableDeclaration(node: Node): node is RequireVariableDeclaration;
+    export function isRequireVariableStatement(node: Node): node is RequireVariableStatement;
     export function isSingleOrDoubleQuote(charCode: number): boolean;
     export function isStringDoubleQuoted(str: StringLiteralLike, sourceFile: SourceFile): boolean;
     export function isAssignmentDeclaration(decl: Declaration): boolean;
@@ -9978,7 +10096,7 @@ declare module "typescript" {
     /** Any series of property and element accesses, ending in a literal element access */
     export function isBindableStaticElementAccessExpression(node: Node, excludeThisKeyword?: boolean): node is BindableStaticElementAccessExpression;
     export function isBindableStaticNameExpression(node: Node, excludeThisKeyword?: boolean): node is BindableStaticNameExpression;
-    export function getNameOrArgument(expr: PropertyAccessExpression | LiteralLikeElementAccessExpression): Identifier | PrivateIdentifier | (Expression & (NumericLiteral | StringLiteralLike | WellKnownSymbolExpression));
+    export function getNameOrArgument(expr: PropertyAccessExpression | LiteralLikeElementAccessExpression): MemberName | (Expression & (NumericLiteral | StringLiteralLike));
     /**
      * Does not handle signed numeric names like `a[+0]` - handling those would require handling prefix unary expressions
      * throughout late binding handling as well, which is awkward (but ultimately probably doable if there is demand)
@@ -9992,6 +10110,7 @@ declare module "typescript" {
     export function isSpecialPropertyDeclaration(expr: PropertyAccessExpression | ElementAccessExpression): expr is PropertyAccessExpression | LiteralLikeElementAccessExpression;
     export function setValueDeclaration(symbol: Symbol, node: Declaration): void;
     export function isFunctionSymbol(symbol: Symbol | undefined): boolean | undefined;
+    export function tryGetModuleSpecifierFromDeclaration(node: AnyImportOrRequire): string | undefined;
     export function importFromModuleSpecifier(node: StringLiteralLike): AnyValidImportOrReExport;
     export function tryGetImportFromModuleSpecifier(node: StringLiteralLike): AnyValidImportOrReExport | undefined;
     export function getExternalModuleName(node: AnyImportOrReExport | ImportTypeNode | ImportCall | ModuleDeclaration): Expression | undefined;
@@ -10095,24 +10214,14 @@ declare module "typescript" {
      *   3. The computed name is *not* expressed as a NumericLiteral.
      *   4. The computed name is *not* expressed as a PlusToken or MinusToken
      *      immediately followed by a NumericLiteral.
-     *   5. The computed name is *not* expressed as `Symbol.<name>`, where `<name>`
-     *      is a property of the Symbol constructor that denotes a built-in
-     *      Symbol.
      */
     export function hasDynamicName(declaration: Declaration): declaration is DynamicNamedDeclaration | DynamicNamedBinaryExpression;
     export function isDynamicName(name: DeclarationName): boolean;
-    /**
-     * Checks if the expression is of the form:
-     *    Symbol.name
-     * where Symbol is literally the word "Symbol", and name is any identifierName
-     */
-    export function isWellKnownSymbolSyntactically(node: Node): node is WellKnownSymbolExpression;
     export function getPropertyNameForPropertyNameNode(name: PropertyName): __String | undefined;
     export function isPropertyNameLiteral(node: Node): node is PropertyNameLiteral;
     export function getTextOfIdentifierOrLiteral(node: PropertyNameLiteral): string;
     export function getEscapedTextOfIdentifierOrLiteral(node: PropertyNameLiteral): __String;
     export function getPropertyNameForUniqueESSymbol(symbol: Symbol): __String;
-    export function getPropertyNameForKnownSymbolName(symbolName: string): __String;
     export function getSymbolNameForPrivateIdentifier(containingClassSymbol: Symbol, description: __String): __String;
     export function isKnownSymbol(symbol: Symbol): boolean;
     /**
@@ -10284,6 +10393,9 @@ declare module "typescript" {
     export function hasEffectiveModifier(node: Node, flags: ModifierFlags): boolean;
     export function hasSyntacticModifier(node: Node, flags: ModifierFlags): boolean;
     export function hasStaticModifier(node: Node): boolean;
+    export function hasOverrideModifier(node: Node): boolean;
+    export function hasAbstractModifier(node: Node): boolean;
+    export function hasAmbientModifier(node: Node): boolean;
     export function hasEffectiveReadonlyModifier(node: Node): boolean;
     export function getSelectedEffectiveModifierFlags(node: Node, flags: ModifierFlags): ModifierFlags;
     export function getSelectedSyntacticModifierFlags(node: Node, flags: ModifierFlags): ModifierFlags;
@@ -10314,6 +10426,7 @@ declare module "typescript" {
     export function getSyntacticModifierFlagsNoCache(node: Node): ModifierFlags;
     export function modifiersToFlags(modifiers: readonly Modifier[] | undefined): ModifierFlags;
     export function modifierToFlag(token: SyntaxKind): ModifierFlags;
+    export function createModifiers(modifierFlags: ModifierFlags): ModifiersArray | undefined;
     export function isLogicalOperator(token: SyntaxKind): boolean;
     export function isLogicalOrCoalescingAssignmentOperator(token: SyntaxKind): token is LogicalOrCoalescingAssignmentOperator;
     export function isLogicalOrCoalescingAssignmentExpression(expr: BinaryExpression): expr is AssignmentExpression<Token<LogicalOrCoalescingAssignmentOperator>>;
@@ -10327,6 +10440,7 @@ declare module "typescript" {
     export function tryGetClassImplementingOrExtendingExpressionWithTypeArguments(node: Node): ClassImplementingOrExtendingExpressionWithTypeArguments | undefined;
     export function isAssignmentExpression(node: Node, excludeCompoundAssignment: true): node is AssignmentExpression<EqualsToken>;
     export function isAssignmentExpression(node: Node, excludeCompoundAssignment?: false): node is AssignmentExpression<AssignmentOperatorToken>;
+    export function isLeftHandSideOfAssignment(node: Node): boolean;
     export function isDestructuringAssignment(node: Node): node is DestructuringAssignment;
     export function isExpressionWithTypeArgumentsInClassExtendsClause(node: Node): node is ExpressionWithTypeArguments;
     export function isEntityNameExpression(node: Node): node is EntityNameExpression;
@@ -10421,7 +10535,7 @@ declare module "typescript" {
     export function isWatchSet(options: CompilerOptions): boolean | undefined;
     export function closeFileWatcher(watcher: FileWatcher): void;
     export function getCheckFlags(symbol: Symbol): CheckFlags;
-    export function getDeclarationModifierFlagsFromSymbol(s: Symbol): ModifierFlags;
+    export function getDeclarationModifierFlagsFromSymbol(s: Symbol, isWrite?: boolean): ModifierFlags;
     export function skipAlias(symbol: Symbol, checker: TypeChecker): Symbol;
     /** See comment on `declareModuleMember` in `binder.ts`. */
     export function getCombinedLocalAndExportSymbolFlags(symbol: Symbol): SymbolFlags;
@@ -10431,31 +10545,31 @@ declare module "typescript" {
     /**
      * clears already present map by calling onDeleteExistingValue callback before deleting that key/value
      */
-    export function clearMap<T>(map: {
-        forEach: ESMap<string, T>["forEach"];
-        clear: ESMap<string, T>["clear"];
-    }, onDeleteValue: (valueInMap: T, key: string) => void): void;
-    export interface MutateMapSkippingNewValuesOptions<T, U> {
-        onDeleteValue(existingValue: T, key: string): void;
+    export function clearMap<K, T>(map: {
+        forEach: ESMap<K, T>["forEach"];
+        clear: ESMap<K, T>["clear"];
+    }, onDeleteValue: (valueInMap: T, key: K) => void): void;
+    export interface MutateMapSkippingNewValuesOptions<K, T, U> {
+        onDeleteValue(existingValue: T, key: K): void;
         /**
          * If present this is called with the key when there is value for that key both in new map as well as existing map provided
          * Caller can then decide to update or remove this key.
          * If the key is removed, caller will get callback of createNewValue for that key.
          * If this callback is not provided, the value of such keys is not updated.
          */
-        onExistingValue?(existingValue: T, valueInNewMap: U, key: string): void;
+        onExistingValue?(existingValue: T, valueInNewMap: U, key: K): void;
     }
     /**
      * Mutates the map with newMap such that keys in map will be same as newMap.
      */
-    export function mutateMapSkippingNewValues<T, U>(map: ESMap<string, T>, newMap: ReadonlyESMap<string, U>, options: MutateMapSkippingNewValuesOptions<T, U>): void;
-    export interface MutateMapOptions<T, U> extends MutateMapSkippingNewValuesOptions<T, U> {
-        createNewValue(key: string, valueInNewMap: U): T;
+    export function mutateMapSkippingNewValues<K, T, U>(map: ESMap<K, T>, newMap: ReadonlyESMap<K, U>, options: MutateMapSkippingNewValuesOptions<K, T, U>): void;
+    export interface MutateMapOptions<K, T, U> extends MutateMapSkippingNewValuesOptions<K, T, U> {
+        createNewValue(key: K, valueInNewMap: U): T;
     }
     /**
      * Mutates the map with newMap such that keys in map will be same as newMap.
      */
-    export function mutateMap<T, U>(map: ESMap<string, T>, newMap: ReadonlyESMap<string, U>, options: MutateMapOptions<T, U>): void;
+    export function mutateMap<K, T, U>(map: ESMap<K, T>, newMap: ReadonlyESMap<K, U>, options: MutateMapOptions<K, T, U>): void;
     export function isAbstractConstructorSymbol(symbol: Symbol): boolean;
     export function getClassLikeDeclarationOfSymbol(symbol: Symbol): ClassLikeDeclaration | undefined;
     export function getObjectFlags(type: Type): ObjectFlags;
@@ -10465,8 +10579,8 @@ declare module "typescript" {
     export function showModuleSpecifier({ moduleSpecifier }: ImportDeclaration): string;
     export function getLastChild(node: Node): Node | undefined;
     /** Add a value to a set, and return true if it wasn't already present. */
-    export function addToSeen(seen: ESMap<string, true>, key: string | number): boolean;
-    export function addToSeen<T>(seen: ESMap<string, T>, key: string | number, value: T): boolean;
+    export function addToSeen<K>(seen: ESMap<K, true>, key: K): boolean;
+    export function addToSeen<K, T>(seen: ESMap<K, T>, key: K, value: T): boolean;
     export function isObjectTypeDeclaration(node: Node): node is ObjectTypeDeclaration;
     export function isTypeNodeKind(kind: SyntaxKind): kind is TypeNodeSyntaxKind;
     export function isAccessExpression(node: Node): node is AccessExpression;
@@ -10721,6 +10835,7 @@ declare module "typescript" {
      */
     export function expressionResultIsUnused(node: Expression): boolean;
     export function containsIgnoredPath(path: string): boolean;
+    export function getContainingNodeArray(node: Node): NodeArray<Node> | undefined;
     export {};
 }
 declare module "typescript" {
@@ -10898,8 +11013,8 @@ declare module "typescript" {
         createImportStarCallbackHelper(): Expression;
         createImportDefaultHelper(expression: Expression): Expression;
         createExportStarHelper(moduleExpression: Expression, exportsExpression?: Expression): Expression;
-        createClassPrivateFieldGetHelper(receiver: Expression, privateField: Identifier): Expression;
-        createClassPrivateFieldSetHelper(receiver: Expression, privateField: Identifier, value: Expression): Expression;
+        createClassPrivateFieldGetHelper(receiver: Expression, state: Identifier, kind: PrivateIdentifierKind, f: Identifier | undefined): Expression;
+        createClassPrivateFieldSetHelper(receiver: Expression, state: Identifier, value: Expression, kind: PrivateIdentifierKind, f: Identifier | undefined): Expression;
     }
     function createEmitHelperFactory(context: TransformationContext): EmitHelperFactory;
     function compareEmitHelpers(x: EmitHelper, y: EmitHelper): Comparison;
@@ -10929,7 +11044,106 @@ declare module "typescript" {
     const importStarHelper: UnscopedEmitHelper;
     const importDefaultHelper: UnscopedEmitHelper;
     const exportStarHelper: UnscopedEmitHelper;
+    /**
+     * Parameters:
+     *  @param receiver — The object from which the private member will be read.
+     *  @param state — One of the following:
+     *      - A WeakMap used to read a private instance field.
+     *      - A WeakSet used as an instance brand for private instance methods and accessors.
+     *      - A function value that should be the undecorated class constructor used to brand check private static fields, methods, and accessors.
+     *  @param kind — (optional pre TS 4.3, required for TS 4.3+) One of the following values:
+     *      - undefined — Indicates a private instance field (pre TS 4.3).
+     *      - "f" — Indicates a private field (instance or static).
+     *      - "m" — Indicates a private method (instance or static).
+     *      - "a" — Indicates a private accessor (instance or static).
+     *  @param f — (optional pre TS 4.3) Depends on the arguments for state and kind:
+     *      - If kind is "m", this should be the function corresponding to the static or instance method.
+     *      - If kind is "a", this should be the function corresponding to the getter method, or undefined if the getter was not defined.
+     *      - If kind is "f" and state is a function, this should be an object holding the value of a static field, or undefined if the static field declaration has not yet been evaluated.
+     * Usage:
+     * This helper will only ever be used by the compiler in the following ways:
+     *
+     * Reading from a private instance field (pre TS 4.3):
+     *      __classPrivateFieldGet(<any>, <WeakMap>)
+     *
+     * Reading from a private instance field (TS 4.3+):
+     *      __classPrivateFieldGet(<any>, <WeakMap>, "f")
+     *
+     * Reading from a private instance get accessor (when defined, TS 4.3+):
+     *      __classPrivateFieldGet(<any>, <WeakSet>, "a", <function>)
+     *
+     * Reading from a private instance get accessor (when not defined, TS 4.3+):
+     *      __classPrivateFieldGet(<any>, <WeakSet>, "a", void 0)
+     *      NOTE: This always results in a runtime error.
+     *
+     * Reading from a private instance method (TS 4.3+):
+     *      __classPrivateFieldGet(<any>, <WeakSet>, "m", <function>)
+     *
+     * Reading from a private static field (TS 4.3+):
+     *      __classPrivateFieldGet(<any>, <constructor>, "f", <{ value: any }>)
+     *
+     * Reading from a private static get accessor (when defined, TS 4.3+):
+     *      __classPrivateFieldGet(<any>, <constructor>, "a", <function>)
+     *
+     * Reading from a private static get accessor (when not defined, TS 4.3+):
+     *      __classPrivateFieldGet(<any>, <constructor>, "a", void 0)
+     *      NOTE: This always results in a runtime error.
+     *
+     * Reading from a private static method (TS 4.3+):
+     *      __classPrivateFieldGet(<any>, <constructor>, "m", <function>)
+     */
     const classPrivateFieldGetHelper: UnscopedEmitHelper;
+    /**
+     * Parameters:
+     *  @param receiver — The object on which the private member will be set.
+     *  @param state — One of the following:
+     *      - A WeakMap used to store a private instance field.
+     *      - A WeakSet used as an instance brand for private instance methods and accessors.
+     *      - A function value that should be the undecorated class constructor used to brand check private static fields, methods, and accessors.
+     *  @param value — The value to set.
+     *  @param kind — (optional pre TS 4.3, required for TS 4.3+) One of the following values:
+     *       - undefined — Indicates a private instance field (pre TS 4.3).
+     *       - "f" — Indicates a private field (instance or static).
+     *       - "m" — Indicates a private method (instance or static).
+     *       - "a" — Indicates a private accessor (instance or static).
+     *   @param f — (optional pre TS 4.3) Depends on the arguments for state and kind:
+     *       - If kind is "m", this should be the function corresponding to the static or instance method.
+     *       - If kind is "a", this should be the function corresponding to the setter method, or undefined if the setter was not defined.
+     *       - If kind is "f" and state is a function, this should be an object holding the value of a static field, or undefined if the static field declaration has not yet been evaluated.
+     * Usage:
+     * This helper will only ever be used by the compiler in the following ways:
+     *
+     * Writing to a private instance field (pre TS 4.3):
+     *      __classPrivateFieldSet(<any>, <WeakMap>, <any>)
+     *
+     * Writing to a private instance field (TS 4.3+):
+     *      __classPrivateFieldSet(<any>, <WeakMap>, <any>, "f")
+     *
+     * Writing to a private instance set accessor (when defined, TS 4.3+):
+     *      __classPrivateFieldSet(<any>, <WeakSet>, <any>, "a", <function>)
+     *
+     * Writing to a private instance set accessor (when not defined, TS 4.3+):
+     *      __classPrivateFieldSet(<any>, <WeakSet>, <any>, "a", void 0)
+     *      NOTE: This always results in a runtime error.
+     *
+     * Writing to a private instance method (TS 4.3+):
+     *      __classPrivateFieldSet(<any>, <WeakSet>, <any>, "m", <function>)
+     *      NOTE: This always results in a runtime error.
+     *
+     * Writing to a private static field (TS 4.3+):
+     *      __classPrivateFieldSet(<any>, <constructor>, <any>, "f", <{ value: any }>)
+     *
+     * Writing to a private static set accessor (when defined, TS 4.3+):
+     *      __classPrivateFieldSet(<any>, <constructor>, <any>, "a", <function>)
+     *
+     * Writing to a private static set accessor (when not defined, TS 4.3+):
+     *      __classPrivateFieldSet(<any>, <constructor>, <any>, "a", void 0)
+     *      NOTE: This always results in a runtime error.
+     *
+     * Writing to a private static method (TS 4.3+):
+     *      __classPrivateFieldSet(<any>, <constructor>, <any>, "m", <function>)
+     *      NOTE: This always results in a runtime error.
+     */
     const classPrivateFieldSetHelper: UnscopedEmitHelper;
     function getAllUnscopedEmitHelpers(): ReadonlyESMap<string, UnscopedEmitHelper>;
     const asyncSuperHelper: EmitHelper;
@@ -10946,15 +11160,28 @@ declare module "typescript" {
     function isTemplateHead(node: Node): node is TemplateHead;
     function isTemplateMiddle(node: Node): node is TemplateMiddle;
     function isTemplateTail(node: Node): node is TemplateTail;
+    function isDotDotDotToken(node: Node): node is DotDotDotToken;
+    function isCommaToken(node: Node): node is Token<SyntaxKind.CommaToken>;
+    function isPlusToken(node: Node): node is PlusToken;
+    function isMinusToken(node: Node): node is MinusToken;
+    function isAsteriskToken(node: Node): node is AsteriskToken;
+    function isExclamationToken(node: Node): node is ExclamationToken;
+    function isQuestionToken(node: Node): node is QuestionToken;
+    function isColonToken(node: Node): node is ColonToken;
+    function isQuestionDotToken(node: Node): node is QuestionDotToken;
+    function isEqualsGreaterThanToken(node: Node): node is EqualsGreaterThanToken;
     function isIdentifier(node: Node): node is Identifier;
+    function isPrivateIdentifier(node: Node): node is PrivateIdentifier;
+    function isExportModifier(node: Node): node is ExportKeyword;
+    function isAsyncModifier(node: Node): node is AsyncKeyword;
+    function isAssertsKeyword(node: Node): node is AssertsKeyword;
+    function isAwaitKeyword(node: Node): node is AwaitKeyword;
+    function isReadonlyKeyword(node: Node): node is ReadonlyKeyword;
+    function isStaticModifier(node: Node): node is StaticKeyword;
+    function isSuperKeyword(node: Node): node is SuperExpression;
+    function isImportKeyword(node: Node): node is ImportExpression;
     function isQualifiedName(node: Node): node is QualifiedName;
     function isComputedPropertyName(node: Node): node is ComputedPropertyName;
-    function isPrivateIdentifier(node: Node): node is PrivateIdentifier;
-    function isSuperKeyword(node: Node): node is Token<SyntaxKind.SuperKeyword>;
-    function isImportKeyword(node: Node): node is Token<SyntaxKind.ImportKeyword>;
-    function isCommaToken(node: Node): node is Token<SyntaxKind.CommaToken>;
-    function isQuestionToken(node: Node): node is Token<SyntaxKind.QuestionToken>;
-    function isExclamationToken(node: Node): node is Token<SyntaxKind.ExclamationToken>;
     function isTypeParameterDeclaration(node: Node): node is TypeParameterDeclaration;
     function isParameter(node: Node): node is ParameterDeclaration;
     function isDecorator(node: Node): node is Decorator;
@@ -11100,6 +11327,7 @@ declare module "typescript" {
     function isUnparsedSource(node: Node): node is UnparsedSource;
     function isJSDocTypeExpression(node: Node): node is JSDocTypeExpression;
     function isJSDocNameReference(node: Node): node is JSDocNameReference;
+    function isJSDocLink(node: Node): node is JSDocLink;
     function isJSDocAllType(node: Node): node is JSDocAllType;
     function isJSDocUnknownType(node: Node): node is JSDocUnknownType;
     function isJSDocNullableType(node: Node): node is JSDocNullableType;
@@ -11119,6 +11347,7 @@ declare module "typescript" {
     function isJSDocPrivateTag(node: Node): node is JSDocPrivateTag;
     function isJSDocProtectedTag(node: Node): node is JSDocProtectedTag;
     function isJSDocReadonlyTag(node: Node): node is JSDocReadonlyTag;
+    function isJSDocOverrideTag(node: Node): node is JSDocOverrideTag;
     function isJSDocDeprecatedTag(node: Node): node is JSDocDeprecatedTag;
     function isJSDocSeeTag(node: Node): node is JSDocSeeTag;
     function isJSDocEnumTag(node: Node): node is JSDocEnumTag;
@@ -11216,9 +11445,34 @@ declare module "typescript" {
     function getElementsOfBindingOrAssignmentPattern(name: BindingOrAssignmentPattern): readonly BindingOrAssignmentElement[];
     function getJSDocTypeAliasName(fullName: JSDocNamespaceBody | undefined): Identifier | undefined;
     function canHaveModifiers(node: Node): node is HasModifiers;
-    function isExportModifier(node: Modifier): node is ExportKeyword;
-    function isAsyncModifier(node: Modifier): node is AsyncKeyword;
-    function isStaticModifier(node: Modifier): node is StaticKeyword;
+    const isTypeNodeOrTypeParameterDeclaration: (node: Node) => node is TypeParameterDeclaration | TypeNode;
+    const isQuestionOrExclamationToken: (node: Node) => node is QuestionToken | ExclamationToken;
+    const isIdentifierOrThisTypeNode: (node: Node) => node is Identifier | ThisTypeNode;
+    const isReadonlyKeywordOrPlusOrMinusToken: (node: Node) => node is ReadonlyKeyword | PlusToken | MinusToken;
+    const isQuestionOrPlusOrMinusToken: (node: Node) => node is QuestionToken | PlusToken | MinusToken;
+    const isModuleName: (node: Node) => node is ModuleName;
+    function isLiteralTypeLikeExpression(node: Node): node is NullLiteral | BooleanLiteral | LiteralExpression | PrefixUnaryExpression;
+    function isBinaryOperatorToken(node: Node): node is BinaryOperatorToken;
+    /**
+     * Creates a state machine that walks a `BinaryExpression` using the heap to reduce call-stack depth on a large tree.
+     * @param onEnter Callback evaluated when entering a `BinaryExpression`. Returns new user-defined state to associate with the node while walking.
+     * @param onLeft Callback evaluated when walking the left side of a `BinaryExpression`. Return a `BinaryExpression` to continue walking, or `void` to advance to the right side.
+     * @param onRight Callback evaluated when walking the right side of a `BinaryExpression`. Return a `BinaryExpression` to continue walking, or `void` to advance to the end of the node.
+     * @param onExit Callback evaluated when exiting a `BinaryExpression`. The result returned will either be folded into the parent's state, or returned from the walker if at the top frame.
+     * @param foldState Callback evaluated when the result from a nested `onExit` should be folded into the state of that node's parent.
+     * @returns A function that walks a `BinaryExpression` node using the above callbacks, returning the result of the call to `onExit` from the outermost `BinaryExpression` node.
+     */
+    function createBinaryExpressionTrampoline<TState, TResult>(onEnter: (node: BinaryExpression, prev: TState | undefined) => TState, onLeft: ((left: Expression, userState: TState, node: BinaryExpression) => BinaryExpression | void) | undefined, onOperator: ((operatorToken: BinaryOperatorToken, userState: TState, node: BinaryExpression) => void) | undefined, onRight: ((right: Expression, userState: TState, node: BinaryExpression) => BinaryExpression | void) | undefined, onExit: (node: BinaryExpression, userState: TState) => TResult, foldState: ((userState: TState, result: TResult, side: "left" | "right") => TState) | undefined): (node: BinaryExpression) => TResult;
+    /**
+     * Creates a state machine that walks a `BinaryExpression` using the heap to reduce call-stack depth on a large tree.
+     * @param onEnter Callback evaluated when entering a `BinaryExpression`. Returns new user-defined state to associate with the node while walking.
+     * @param onLeft Callback evaluated when walking the left side of a `BinaryExpression`. Return a `BinaryExpression` to continue walking, or `void` to advance to the right side.
+     * @param onRight Callback evaluated when walking the right side of a `BinaryExpression`. Return a `BinaryExpression` to continue walking, or `void` to advance to the end of the node.
+     * @param onExit Callback evaluated when exiting a `BinaryExpression`. The result returned will either be folded into the parent's state, or returned from the walker if at the top frame.
+     * @param foldState Callback evaluated when the result from a nested `onExit` should be folded into the state of that node's parent.
+     * @returns A function that walks a `BinaryExpression` node using the above callbacks, returning the result of the call to `onExit` from the outermost `BinaryExpression` node.
+     */
+    function createBinaryExpressionTrampoline<TOuterState, TState, TResult>(onEnter: (node: BinaryExpression, prev: TState | undefined, outerState: TOuterState) => TState, onLeft: ((left: Expression, userState: TState, node: BinaryExpression) => BinaryExpression | void) | undefined, onOperator: ((operatorToken: BinaryOperatorToken, userState: TState, node: BinaryExpression) => void) | undefined, onRight: ((right: Expression, userState: TState, node: BinaryExpression) => BinaryExpression | void) | undefined, onExit: (node: BinaryExpression, userState: TState) => TResult, foldState: ((userState: TState, result: TResult, side: "left" | "right") => TState) | undefined): (node: BinaryExpression, outerState: TOuterState) => TResult;
 }
 declare module "typescript" {
     function setTextRange<T extends TextRange>(range: T, location: TextRange | undefined): T;
@@ -11376,7 +11630,7 @@ declare module "typescript" {
     /**
      * Reads the config file, reports errors if any and exits if the config file cannot be found
      */
-    export function getParsedCommandLineOfConfigFile(configFileName: string, optionsToExtend: CompilerOptions, host: ParseConfigFileHost, extendedConfigCache?: Map<ExtendedConfigCacheEntry>, watchOptionsToExtend?: WatchOptions, extraFileExtensions?: readonly FileExtensionInfo[]): ParsedCommandLine | undefined;
+    export function getParsedCommandLineOfConfigFile(configFileName: string, optionsToExtend: CompilerOptions | undefined, host: ParseConfigFileHost, extendedConfigCache?: Map<ExtendedConfigCacheEntry>, watchOptionsToExtend?: WatchOptions, extraFileExtensions?: readonly FileExtensionInfo[]): ParsedCommandLine | undefined;
     /**
      * Read tsconfig.json file
      * @param fileName The path to the config file
@@ -11436,7 +11690,7 @@ declare module "typescript" {
      * This returns the json value (apart from checking errors) only if returnValue provided is true.
      * Otherwise it just checks the errors and returns undefined
      */
-    export function convertToObjectWorker(sourceFile: JsonSourceFile, errors: Push<Diagnostic>, returnValue: boolean, knownRootOptions: CommandLineOption | undefined, jsonConversionNotifier: JsonConversionNotifier | undefined): any;
+    export function convertToObjectWorker(sourceFile: JsonSourceFile, rootExpression: Expression | undefined, errors: Push<Diagnostic>, returnValue: boolean, knownRootOptions: CommandLineOption | undefined, jsonConversionNotifier: JsonConversionNotifier | undefined): any;
     /** @internal */
     export interface TSConfig {
         compilerOptions: CompilerOptions;
@@ -11699,6 +11953,10 @@ declare module "typescript" {
     function visitFunctionBody(node: FunctionBody | undefined, visitor: Visitor, context: TransformationContext, nodeVisitor?: NodeVisitor): FunctionBody | undefined;
     function visitFunctionBody(node: ConciseBody, visitor: Visitor, context: TransformationContext, nodeVisitor?: NodeVisitor): ConciseBody;
     /**
+     * Visits an iteration body, adding any block-scoped variables required by the transformation.
+     */
+    function visitIterationBody(body: Statement, visitor: Visitor, context: TransformationContext): Statement;
+    /**
      * Visits each child of a Node using the supplied visitor, possibly returning a new Node of the same kind in its place.
      *
      * @param node The Node whose children will be visited.
@@ -11813,6 +12071,12 @@ declare module "typescript" {
     function isInitializedProperty(member: ClassElement): member is PropertyDeclaration & {
         initializer: Expression;
     };
+    /**
+     * Gets a value indicating whether a class element is a private instance method or accessor.
+     *
+     * @param member The class element node.
+     */
+    function isNonStaticMethodOrAccessorWithPrivateName(member: ClassElement): member is PrivateIdentifierMethodDeclaration | PrivateIdentifierAccessorDeclaration;
 }
 declare module "typescript" {
     enum FlattenLevel {
@@ -11855,6 +12119,11 @@ declare module "typescript" {
     function transformTypeScript(context: TransformationContext): (node: SourceFile | Bundle) => SourceFile | Bundle;
 }
 declare module "typescript" {
+    enum PrivateIdentifierKind {
+        Field = "f",
+        Method = "m",
+        Accessor = "a"
+    }
     /**
      * Transforms ECMAScript Class Syntax.
      * TypeScript parameter property syntax is transformed in the TypeScript transformer.
@@ -11877,6 +12146,9 @@ declare module "typescript" {
 }
 declare module "typescript" {
     function transformES2020(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle;
+}
+declare module "typescript" {
+    function transformES2021(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle;
 }
 declare module "typescript" {
     function transformESNext(context: TransformationContext): (x: SourceFile | Bundle) => SourceFile | Bundle;
@@ -12028,13 +12300,21 @@ declare module "typescript" {
         Full = 2
     }
     interface SharedExtendedConfigFileWatcher<T> extends FileWatcher {
-        fileWatcher: FileWatcher;
+        watcher: FileWatcher;
         projects: Set<T>;
     }
     /**
      * Updates the map of shared extended config file watches with a new set of extended config files from a base config file of the project
      */
-    function updateSharedExtendedConfigFileWatcher<T>(projectPath: T, parsed: ParsedCommandLine | undefined, extendedConfigFilesMap: ESMap<Path, SharedExtendedConfigFileWatcher<T>>, createExtendedConfigFileWatch: (extendedConfigPath: string, extendedConfigFilePath: Path) => FileWatcher, toPath: (fileName: string) => Path): void;
+    function updateSharedExtendedConfigFileWatcher<T>(projectPath: T, options: CompilerOptions | undefined, extendedConfigFilesMap: ESMap<Path, SharedExtendedConfigFileWatcher<T>>, createExtendedConfigFileWatch: (extendedConfigPath: string, extendedConfigFilePath: Path) => FileWatcher, toPath: (fileName: string) => Path): void;
+    /**
+     * Remove the project from the extended config file watchers and close not needed watches
+     */
+    function clearSharedExtendedConfigFileWatcher<T>(projectPath: T, extendedConfigFilesMap: ESMap<Path, SharedExtendedConfigFileWatcher<T>>): void;
+    /**
+     * Clean the extendsConfigCache when extended config file has changed
+     */
+    function cleanExtendedConfigCache(extendedConfigCache: ESMap<string, ExtendedConfigCacheEntry>, extendedConfigFilePath: Path, toPath: (fileName: string) => Path): void;
     /**
      * Updates the existing missing file watches with the new set of missing files after new program is created
      */
@@ -12056,13 +12336,14 @@ declare module "typescript" {
         fileOrDirectoryPath: Path;
         configFileName: string;
         options: CompilerOptions;
-        program: BuilderProgram | Program | undefined;
+        program: BuilderProgram | Program | readonly string[] | undefined;
         extraFileExtensions?: readonly FileExtensionInfo[];
         currentDirectory: string;
         useCaseSensitiveFileNames: boolean;
         writeLog: (s: string) => void;
+        toPath: (fileName: string) => Path;
     }
-    function isIgnoredFileFromWildCardWatching({ watchedDirPath, fileOrDirectory, fileOrDirectoryPath, configFileName, options, program, extraFileExtensions, currentDirectory, useCaseSensitiveFileNames, writeLog, }: IsIgnoredFileFromWildCardWatchingInput): boolean;
+    function isIgnoredFileFromWildCardWatching({ watchedDirPath, fileOrDirectory, fileOrDirectoryPath, configFileName, options, program, extraFileExtensions, currentDirectory, useCaseSensitiveFileNames, writeLog, toPath, }: IsIgnoredFileFromWildCardWatchingInput): boolean;
     function isEmittedFileOfProgram(program: Program | undefined, file: string): boolean;
     enum WatchLogLevel {
         None = 0,
@@ -12150,7 +12431,7 @@ declare module "typescript" {
     /**
      * Determines if program structure is upto date or needs to be recreated
      */
-    export function isProgramUptoDate(program: Program | undefined, rootFileNames: string[], newOptions: CompilerOptions, getSourceVersion: (path: Path, fileName: string) => string | undefined, fileExists: (fileName: string) => boolean, hasInvalidatedResolution: HasInvalidatedResolution, hasChangedAutomaticTypeDirectiveNames: HasChangedAutomaticTypeDirectiveNames | undefined, projectReferences: readonly ProjectReference[] | undefined): boolean;
+    export function isProgramUptoDate(program: Program | undefined, rootFileNames: string[], newOptions: CompilerOptions, getSourceVersion: (path: Path, fileName: string) => string | undefined, fileExists: (fileName: string) => boolean, hasInvalidatedResolution: HasInvalidatedResolution, hasChangedAutomaticTypeDirectiveNames: HasChangedAutomaticTypeDirectiveNames | undefined, getParsedCommandLine: (fileName: string) => ParsedCommandLine | undefined, projectReferences: readonly ProjectReference[] | undefined): boolean;
     export function getConfigFileParsingDiagnostics(configFileParseResult: ParsedCommandLine): readonly Diagnostic[];
     /**
      * Create a new 'Program' instance. A Program is an immutable collection of 'SourceFile's and a 'CompilerOptions'
@@ -12259,6 +12540,11 @@ declare module "typescript" {
          */
         readonly exportedModulesMap: ESMap<Path, BuilderState.ReferencedSet> | undefined;
         /**
+         * true if file version is used as signature
+         * This helps in delaying the calculation of the d.ts hash as version for the file till reasonable time
+         */
+        useFileVersionAsSignature: boolean;
+        /**
          * Map of files that have already called update signature.
          * That means hence forth these files are assumed to have
          * no change in their signature for this version of the program
@@ -12302,7 +12588,7 @@ declare module "typescript" {
         /**
          * Creates the state of file references and signature for the new program from oldState if it is safe
          */
-        function create(newProgram: Program, getCanonicalFileName: GetCanonicalFileName, oldState?: Readonly<ReusableBuilderState>): BuilderState;
+        function create(newProgram: Program, getCanonicalFileName: GetCanonicalFileName, oldState?: Readonly<ReusableBuilderState>, disableUseFileVersionAsSignature?: boolean): BuilderState;
         /**
          * Releases needed properties
          */
@@ -12496,19 +12782,25 @@ declare module "typescript" {
          */
         programEmitComplete?: true;
     }
-    type ProgramBuildInfoDiagnostic = string | [
-        string,
-        readonly ReusableDiagnostic[]
+    type ProgramBuildInfoDiagnostic = number | [
+        fileId: number,
+        diagnostics: readonly ReusableDiagnostic[]
     ];
     type ProgramBuilderInfoFilePendingEmit = [
-        string,
-        BuilderFileEmit
+        fileId: number,
+        emitKind: BuilderFileEmit
     ];
+    type ProgramBuildInfoReferencedMap = [
+        fileId: number,
+        fileIdListId: number
+    ][];
     interface ProgramBuildInfo {
-        fileInfos: MapLike<BuilderState.FileInfo>;
+        fileNames: readonly string[];
+        fileInfos: readonly BuilderState.FileInfo[];
         options: CompilerOptions;
-        referencedMap?: MapLike<string[]>;
-        exportedModulesMap?: MapLike<string[]>;
+        fileIdsList?: readonly (readonly number[])[];
+        referencedMap?: ProgramBuildInfoReferencedMap;
+        exportedModulesMap?: ProgramBuildInfoReferencedMap;
         semanticDiagnosticsPerFile?: ProgramBuildInfoDiagnostic[];
         affectedFilesPendingEmit?: ProgramBuilderInfoFilePendingEmit[];
     }
@@ -12550,6 +12842,10 @@ declare module "typescript" {
          * this callback if present would be used to write files
          */
         writeFile?: WriteFileCallback;
+        /**
+         * disable using source file version as signature for testing
+         */
+        disableUseFileVersionAsSignature?: boolean;
     }
     /**
      * Builder to manage the program state changes
@@ -12758,7 +13054,7 @@ declare module "typescript" {
      */
     export function createWatchStatusReporter(system: System, pretty?: boolean): WatchStatusReporter;
     /** Parses config file using System interface */
-    export function parseConfigFileWithSystem(configFileName: string, optionsToExtend: CompilerOptions, watchOptionsToExtend: WatchOptions | undefined, system: System, reportDiagnostic: DiagnosticReporter): ParsedCommandLine | undefined;
+    export function parseConfigFileWithSystem(configFileName: string, optionsToExtend: CompilerOptions, extendedConfigCache: Map<ExtendedConfigCacheEntry> | undefined, watchOptionsToExtend: WatchOptions | undefined, system: System, reportDiagnostic: DiagnosticReporter): ParsedCommandLine | undefined;
     export function getErrorCountForSummary(diagnostics: readonly Diagnostic[]): number;
     export function getWatchErrorSummaryDiagnosticMessage(errorCount: number): DiagnosticMessage;
     export function getErrorSummaryText(errorCount: number, newLine: string): string;
@@ -12790,6 +13086,9 @@ declare module "typescript" {
         WildcardDirectory: "Wild card directory";
         FailedLookupLocations: "Failed Lookup Locations";
         TypeRoots: "Type roots";
+        ConfigFileOfReferencedProject: "Config file of referened project";
+        ExtendedConfigOfReferencedProject: "Extended config file of referenced project";
+        WildcardDirectoryOfReferencedProject: "Wild card directory of referenced project";
     }
     interface WatchFactory<X, Y = undefined> {
         writeLog: (s: string) => void;
@@ -12923,10 +13222,13 @@ declare module "typescript" {
     interface ProgramHost<T extends BuilderProgram> {
         createDirectory?(path: string): void;
         writeFile?(path: string, data: string, writeByteOrderMark?: boolean): void;
+        disableUseFileVersionAsSignature?: boolean;
     }
     interface WatchCompilerHost<T extends BuilderProgram> extends ProgramHost<T>, WatchHost {
         /** Instead of using output d.ts file from project reference, use its source file */
         useSourceOfProjectReferenceRedirect?(): boolean;
+        /** If provided, use this method to get parsed command lines for referenced projects */
+        getParsedCommandLine?(fileName: string): ParsedCommandLine | undefined;
         /** If provided, callback to invoke after every new program creation */
         afterProgramCreate?(program: T): void;
     }
@@ -12963,6 +13265,7 @@ declare module "typescript" {
      */
     interface WatchCompilerHostOfConfigFile<T extends BuilderProgram> extends WatchCompilerHost<T> {
         configFileParsingResult?: ParsedCommandLine;
+        extendedConfigCache?: Map<ExtendedConfigCacheEntry>;
     }
     interface Watch<T> {
         /** Synchronize with host and get updated program */
@@ -13449,7 +13752,7 @@ declare module "typescript" {
         getDeclarations(): Declaration[] | undefined;
         getDocumentationComment(typeChecker: TypeChecker | undefined): SymbolDisplayPart[];
         getContextualDocumentationComment(context: Node | undefined, checker: TypeChecker | undefined): SymbolDisplayPart[];
-        getJsDocTags(): JSDocTagInfo[];
+        getJsDocTags(checker?: TypeChecker): JSDocTagInfo[];
     }
     interface Type {
         getFlags(): TypeFlags;
@@ -13621,11 +13924,14 @@ declare module "typescript" {
         getPackageJsonsVisibleToFile?(fileName: string, rootDir?: string): readonly PackageJsonInfo[];
         getNearestAncestorDirectoryWithPackageJson?(fileName: string): string | undefined;
         getPackageJsonsForAutoImport?(rootDir?: string): readonly PackageJsonInfo[];
-        getImportSuggestionsCache?(): Completions.ImportSuggestionsForFileCache;
+        getExportMapCache?(): ExportMapCache;
+        getModuleSpecifierCache?(): ModuleSpecifierCache;
         setCompilerHost?(host: CompilerHost): void;
         useSourceOfProjectReferenceRedirect?(): boolean;
         getPackageJsonAutoImportProvider?(): Program | undefined;
         sendPerformanceEvent?(kind: PerformanceEvent["kind"], durationMs: number): void;
+        getParsedCommandLine?(fileName: string): ParsedCommandLine | undefined;
+        onReleaseParsedCommandLine?(configFileName: string, oldResolvedRef: ResolvedProjectReference | undefined, optionOptions: CompilerOptions): void;
     }
     const emptyOptions: {};
     type WithMetadata<T> = T & {
@@ -13716,12 +14022,13 @@ declare module "typescript" {
          *
          * @param fileName The path to the file
          * @param position A zero based index of the character where you want the entries
-         * @param entryName The name from an existing completion which came from `getCompletionsAtPosition`
+         * @param entryName The `name` from an existing completion which came from `getCompletionsAtPosition`
          * @param formatOptions How should code samples in the completions be formatted, can be undefined for backwards compatibility
-         * @param source Source code for the current file, can be undefined for backwards compatibility
+         * @param source `source` property from the completion entry
          * @param preferences User settings, can be undefined for backwards compatibility
+         * @param data `data` property from the completion entry
          */
-        getCompletionEntryDetails(fileName: string, position: number, entryName: string, formatOptions: FormatCodeOptions | FormatCodeSettings | undefined, source: string | undefined, preferences: UserPreferences | undefined): CompletionEntryDetails | undefined;
+        getCompletionEntryDetails(fileName: string, position: number, entryName: string, formatOptions: FormatCodeOptions | FormatCodeSettings | undefined, source: string | undefined, preferences: UserPreferences | undefined, data: CompletionEntryData | undefined): CompletionEntryDetails | undefined;
         getCompletionEntrySymbol(fileName: string, position: number, name: string, source: string | undefined): Symbol | undefined;
         /**
          * Gets semantic information about the identifier at a particular position in a
@@ -13806,7 +14113,7 @@ declare module "typescript" {
         fileName: string;
     }
     type OrganizeImportsScope = CombinedCodeFixScope;
-    type CompletionsTriggerCharacter = "." | "\"" | "'" | "`" | "/" | "@" | "<" | "#";
+    type CompletionsTriggerCharacter = "." | "\"" | "'" | "`" | "/" | "@" | "<" | "#" | " ";
     interface GetCompletionsAtPositionOptions extends UserPreferences {
         /**
          * If the editor is asking for completions because a certain character was typed
@@ -14162,6 +14469,7 @@ declare module "typescript" {
         name: string;
         containerKind: ScriptElementKind;
         containerName: string;
+        unverified?: boolean;
         isLocal?: boolean;
     }
     interface DefinitionInfoAndBoundSpan {
@@ -14197,15 +14505,21 @@ declare module "typescript" {
         typeParameterName = 18,
         enumMemberName = 19,
         functionName = 20,
-        regularExpressionLiteral = 21
+        regularExpressionLiteral = 21,
+        link = 22,
+        linkName = 23,
+        linkText = 24
     }
     interface SymbolDisplayPart {
         text: string;
         kind: string;
     }
+    interface JSDocLinkDisplayPart extends SymbolDisplayPart {
+        target: DocumentSpan;
+    }
     interface JSDocTagInfo {
         name: string;
-        text?: string;
+        text?: SymbolDisplayPart[];
     }
     interface QuickInfo {
         kind: ScriptElementKind;
@@ -14290,7 +14604,28 @@ declare module "typescript" {
          * true when the current location also allows for a new identifier
          */
         isNewIdentifierLocation: boolean;
+        /**
+         * Indicates to client to continue requesting completions on subsequent keystrokes.
+         */
+        isIncomplete?: true;
         entries: CompletionEntry[];
+    }
+    interface CompletionEntryData {
+        /** The file name declaring the export's module symbol, if it was an external module */
+        fileName?: string;
+        /** The module name (with quotes stripped) of the export's module symbol, if it was an ambient module */
+        ambientModuleName?: string;
+        /** True if the export was found in the package.json AutoImportProvider */
+        isPackageJsonImport?: true;
+        /**
+         * The name of the property or export in the module's symbol table. Differs from the completion name
+         * in the case of InternalSymbolName.ExportEquals and InternalSymbolName.Default.
+         */
+        exportName: string;
+        /**
+         * Set for auto imports with eagerly resolved module specifiers.
+         */
+        moduleSpecifier?: string;
     }
     interface CompletionEntry {
         name: string;
@@ -14298,6 +14633,7 @@ declare module "typescript" {
         kindModifiers?: string;
         sortText: string;
         insertText?: string;
+        isSnippet?: true;
         /**
          * An optional span that indicates the text to be replaced by this completion item.
          * If present, this span should be used instead of the default one.
@@ -14306,9 +14642,19 @@ declare module "typescript" {
         replacementSpan?: TextSpan;
         hasAction?: true;
         source?: string;
+        sourceDisplay?: SymbolDisplayPart[];
         isRecommended?: true;
         isFromUncheckedFile?: true;
         isPackageJsonImport?: true;
+        /**
+         * A property to be sent back to TS Server in the CompletionDetailsRequest, along with `name`,
+         * that allows TS Server to look up the symbol represented by the completion item, disambiguating
+         * items with the same name. Currently only defined for auto-import completions, but the type is
+         * `unknown` in the protocol, so it can be changed as needed to support other kinds of completions.
+         * The presence of this property should generally not be used to assume that this completion entry
+         * is an auto-import.
+         */
+        data?: CompletionEntryData;
     }
     interface CompletionEntryDetails {
         name: string;
@@ -14318,7 +14664,9 @@ declare module "typescript" {
         documentation?: SymbolDisplayPart[];
         tags?: JSDocTagInfo[];
         codeActions?: CodeAction[];
+        /** @deprecated Use `sourceDisplay` instead. */
         source?: SymbolDisplayPart[];
+        sourceDisplay?: SymbolDisplayPart[];
     }
     interface OutliningSpan {
         /** The span of the document to actually collapse. */
@@ -14472,7 +14820,13 @@ declare module "typescript" {
          */
         jsxAttribute = "JSX attribute",
         /** String literal */
-        string = "string"
+        string = "string",
+        /** Jsdoc @link: in `{@link C link text}`, the before and after text "{@link " and "}" */
+        link = "link",
+        /** Jsdoc @link: in `{@link C link text}`, the entity name "C" */
+        linkName = "link name",
+        /** Jsdoc @link: in `{@link C link text}`, the link text "link text" */
+        linkText = "link text"
     }
     enum ScriptElementKindModifier {
         none = "",
@@ -14768,6 +15122,7 @@ declare module "typescript" {
     function getQuoteFromPreference(qp: QuotePreference): string;
     function symbolNameNoDefault(symbol: Symbol): string | undefined;
     function symbolEscapedNameNoDefault(symbol: Symbol): __String | undefined;
+    function isModuleSpecifierLike(node: Node): node is StringLiteralLike;
     type ObjectBindingElementWithoutPropertyName = BindingElement & {
         name: Identifier;
     };
@@ -14786,7 +15141,7 @@ declare module "typescript" {
      */
     function forEachUnique<T, U>(array: readonly T[] | undefined, callback: (element: T, index: number) => U): U | undefined;
     function isTextWhiteSpaceLike(text: string, startPos: number, endPos: number): boolean;
-    function isFirstDeclarationOfSymbolParameter(symbol: Symbol): boolean;
+    function isFirstDeclarationOfSymbolParameter(symbol: Symbol): boolean | undefined;
     function symbolPart(text: string, symbol: Symbol): SymbolDisplayPart;
     function displayPart(text: string, kind: SymbolDisplayPartKind): SymbolDisplayPart;
     function spacePart(): SymbolDisplayPart;
@@ -14795,6 +15150,10 @@ declare module "typescript" {
     function operatorPart(kind: SyntaxKind): SymbolDisplayPart;
     function textOrKeywordPart(text: string): SymbolDisplayPart;
     function textPart(text: string): SymbolDisplayPart;
+    function linkTextPart(text: string): SymbolDisplayPart;
+    function linkNamePart(name: EntityName, target: Declaration): JSDocLinkDisplayPart;
+    function linkPart(text: string): SymbolDisplayPart;
+    function buildLinkParts(link: JSDocLink, checker?: TypeChecker): SymbolDisplayPart[];
     /**
      * The default is CRLF.
      */
@@ -14879,6 +15238,17 @@ declare module "typescript" {
     function createPackageJsonInfo(fileName: string, host: {
         readFile?(fileName: string): string | undefined;
     }): PackageJsonInfo | undefined;
+    interface PackageJsonImportFilter {
+        allowsImportingAmbientModule: (moduleSymbol: Symbol, moduleSpecifierResolutionHost: ModuleSpecifierResolutionHost) => boolean;
+        allowsImportingSourceFile: (sourceFile: SourceFile, moduleSpecifierResolutionHost: ModuleSpecifierResolutionHost) => boolean;
+        /**
+         * Use for a specific module specifier that has already been resolved.
+         * Use `allowsImportingAmbientModule` or `allowsImportingSourceFile` to resolve
+         * the best module specifier for a given module _and_ determine if it’s importable.
+         */
+        allowsImportingSpecifier: (moduleSpecifier: string) => boolean;
+    }
+    function createPackageJsonImportFilter(fromFile: SourceFile, host: LanguageServiceHost): PackageJsonImportFilter;
     function consumesNodeCoreModules(sourceFile: SourceFile): boolean;
     function isInsideNodeModules(fileOrDirectory: string): boolean;
     function isDiagnosticWithLocation(diagnostic: Diagnostic): diagnostic is DiagnosticWithLocation;
@@ -14920,6 +15290,39 @@ declare module "typescript" {
     function startsWithUnderscore(name: string): boolean;
     function isGlobalDeclaration(declaration: Declaration): boolean;
     function isNonGlobalDeclaration(declaration: Declaration): boolean;
+    enum ImportKind {
+        Named = 0,
+        Default = 1,
+        Namespace = 2,
+        CommonJS = 3
+    }
+    enum ExportKind {
+        Named = 0,
+        Default = 1,
+        ExportEquals = 2,
+        UMD = 3
+    }
+    /** Information about how a symbol is exported from a module. */
+    interface SymbolExportInfo {
+        symbol: Symbol;
+        moduleSymbol: Symbol;
+        exportKind: ExportKind;
+        /** If true, can't use an es6 import from a js file. */
+        exportedSymbolIsTypeOnly: boolean;
+        /** True if export was only found via the package.json AutoImportProvider (for telemetry). */
+        isFromPackageJson: boolean;
+    }
+    interface ExportMapCache {
+        clear(): void;
+        get(file: Path, checker: TypeChecker, projectVersion?: string): MultiMap<string, SymbolExportInfo> | undefined;
+        set(suggestions: MultiMap<string, SymbolExportInfo>, projectVersion?: string): void;
+        isEmpty(): boolean;
+        /** @returns Whether the change resulted in the cache being cleared */
+        onFileChanged(oldSourceFile: SourceFile, newSourceFile: SourceFile, typeAcquisitionEnabled: boolean): boolean;
+    }
+    function createExportMapCache(): ExportMapCache;
+    function createModuleSpecifierCache(): ModuleSpecifierCache;
+    function isImportableFile(program: Program, from: SourceFile, to: SourceFile, packageJsonFilter: PackageJsonImportFilter | undefined, moduleSpecifierResolutionHost: ModuleSpecifierResolutionHost, moduleSpecifierCache: ModuleSpecifierCache | undefined): boolean;
 }
 declare module "typescript" {
     /** The classifier is used for syntactic highlighting in editors via the TSServer */
@@ -14965,7 +15368,7 @@ declare module "typescript" {
 declare module "typescript" {
     namespace Completions.StringCompletions {
         function getStringLiteralCompletions(sourceFile: SourceFile, position: number, contextToken: Node | undefined, checker: TypeChecker, options: CompilerOptions, host: LanguageServiceHost, log: Log, preferences: UserPreferences): CompletionInfo | undefined;
-        function getStringLiteralCompletionDetails(name: string, sourceFile: SourceFile, position: number, contextToken: Node | undefined, checker: TypeChecker, options: CompilerOptions, host: LanguageServiceHost, cancellationToken: CancellationToken): CompletionEntryDetails | undefined;
+        function getStringLiteralCompletionDetails(name: string, sourceFile: SourceFile, position: number, contextToken: Node | undefined, checker: TypeChecker, options: CompilerOptions, host: LanguageServiceHost, cancellationToken: CancellationToken, preferences: UserPreferences): CompletionEntryDetails | undefined;
     }
 }
 declare module "typescript" {
@@ -15002,46 +15405,37 @@ declare module "typescript" {
             Export = 4,
             Promise = 8,
             Nullable = 16,
+            ResolvedExport = 32,
             SymbolMemberNoExport = 2,
             SymbolMemberExport = 6
         }
         interface SymbolOriginInfo {
             kind: SymbolOriginInfoKind;
-        }
-        interface SymbolOriginInfoExport extends SymbolOriginInfo {
-            kind: SymbolOriginInfoKind;
-            moduleSymbol: Symbol;
-            isDefaultExport: boolean;
+            symbolName?: string;
+            moduleSymbol?: Symbol;
+            isDefaultExport?: boolean;
             isFromPackageJson?: boolean;
+            exportName?: string;
+            fileName?: string;
+            moduleSpecifier?: string;
         }
         interface UniqueNameSet {
             add(name: string): void;
             has(name: string): boolean;
         }
         /**
-         * Map from symbol id -> SymbolOriginInfo.
+         * Map from symbol index in `symbols` -> SymbolOriginInfo.
          * Only populated for symbols that come from other modules.
          */
-        type SymbolOriginInfoMap = (SymbolOriginInfo | SymbolOriginInfoExport | undefined)[];
+        type SymbolOriginInfoMap = Record<number, SymbolOriginInfo>;
+        /** Map from symbol id -> SortText. */
         type SymbolSortTextMap = (SortText | undefined)[];
-        export interface AutoImportSuggestion {
-            symbol: Symbol;
-            symbolName: string;
-            skipFilter: boolean;
-            origin: SymbolOriginInfoExport;
-        }
-        export interface ImportSuggestionsForFileCache {
-            clear(): void;
-            get(fileName: string, checker: TypeChecker, projectVersion?: string): readonly AutoImportSuggestion[] | undefined;
-            set(fileName: string, suggestions: readonly AutoImportSuggestion[], projectVersion?: string): void;
-            isEmpty(): boolean;
-        }
-        export function createImportSuggestionsForFileCache(): ImportSuggestionsForFileCache;
         export function getCompletionsAtPosition(host: LanguageServiceHost, program: Program, log: Log, sourceFile: SourceFile, position: number, preferences: UserPreferences, triggerCharacter: CompletionsTriggerCharacter | undefined): CompletionInfo | undefined;
-        export function getCompletionEntriesFromSymbols(symbols: readonly Symbol[], entries: Push<CompletionEntry>, contextToken: Node | undefined, location: Node | undefined, sourceFile: SourceFile, typeChecker: TypeChecker, target: ScriptTarget, log: Log, kind: CompletionKind, preferences: UserPreferences, propertyAccessToConvert?: PropertyAccessExpression, jsxIdentifierExpected?: boolean, isJsxInitializer?: IsJsxInitializer, recommendedCompletion?: Symbol, symbolToOriginInfoMap?: SymbolOriginInfoMap, symbolToSortTextMap?: SymbolSortTextMap): UniqueNameSet;
+        export function getCompletionEntriesFromSymbols(symbols: readonly Symbol[], entries: Push<CompletionEntry>, contextToken: Node | undefined, location: Node, sourceFile: SourceFile, typeChecker: TypeChecker, target: ScriptTarget, log: Log, kind: CompletionKind, preferences: UserPreferences, compilerOptions: CompilerOptions, isTypeOnlyLocation?: boolean, propertyAccessToConvert?: PropertyAccessExpression, jsxIdentifierExpected?: boolean, isJsxInitializer?: IsJsxInitializer, importCompletionNode?: Node, recommendedCompletion?: Symbol, symbolToOriginInfoMap?: SymbolOriginInfoMap, symbolToSortTextMap?: SymbolSortTextMap): UniqueNameSet;
         export interface CompletionEntryIdentifier {
             name: string;
             source?: string;
+            data?: CompletionEntryData;
         }
         export function getCompletionEntryDetails(program: Program, log: Log, sourceFile: SourceFile, position: number, entryId: CompletionEntryIdentifier, host: LanguageServiceHost, formatContext: formatting.FormatContext, preferences: UserPreferences, cancellationToken: CancellationToken): CompletionEntryDetails | undefined;
         export function createCompletionDetailsForSymbol(symbol: Symbol, checker: TypeChecker, sourceFile: SourceFile, location: Node, cancellationToken: CancellationToken, codeActions?: CodeAction[], sourceDisplay?: SymbolDisplayPart[]): CompletionEntryDetails;
@@ -15384,7 +15778,9 @@ declare module "typescript" {
         function getDefinitionAtPosition(program: Program, sourceFile: SourceFile, position: number): readonly DefinitionInfo[] | undefined;
         function getReferenceAtPosition(sourceFile: SourceFile, position: number, program: Program): {
             reference: FileReference;
-            file: SourceFile;
+            fileName: string;
+            unverified: boolean;
+            file?: SourceFile;
         } | undefined;
         function getTypeDefinitionAtPosition(typeChecker: TypeChecker, sourceFile: SourceFile, position: number): readonly DefinitionInfo[] | undefined;
         function getDefinitionAndBoundSpan(program: Program, sourceFile: SourceFile, position: number): DefinitionInfoAndBoundSpan | undefined;
@@ -15393,8 +15789,8 @@ declare module "typescript" {
 }
 declare module "typescript" {
     namespace JsDoc {
-        function getJsDocCommentsFromDeclarations(declarations: readonly Declaration[]): SymbolDisplayPart[];
-        function getJsDocTagsFromDeclarations(declarations?: Declaration[]): JSDocTagInfo[];
+        function getJsDocCommentsFromDeclarations(declarations: readonly Declaration[], checker?: TypeChecker): SymbolDisplayPart[];
+        function getJsDocTagsFromDeclarations(declarations?: Declaration[], checker?: TypeChecker): JSDocTagInfo[];
         function getJSDocTagNameCompletions(): CompletionEntry[];
         const getJSDocTagNameCompletionDetails: typeof getJSDocTagCompletionDetails;
         function getJSDocTagCompletions(): CompletionEntry[];
@@ -15893,6 +16289,7 @@ declare module "typescript" {
             insertTypeParameters(sourceFile: SourceFile, node: SignatureDeclaration, typeParameters: readonly TypeParameterDeclaration[]): void;
             private getOptionsForInsertNodeBefore;
             insertNodeAtConstructorStart(sourceFile: SourceFile, ctr: ConstructorDeclaration, newStatement: Statement): void;
+            insertNodeAtConstructorStartAfterSuperCall(sourceFile: SourceFile, ctr: ConstructorDeclaration, newStatement: Statement): void;
             insertNodeAtConstructorEnd(sourceFile: SourceFile, ctr: ConstructorDeclaration, newStatement: Statement): void;
             private replaceConstructorBody;
             insertNodeAtEndOfScope(sourceFile: SourceFile, scope: Node, newNode: Node): void;
@@ -15953,6 +16350,7 @@ declare module "typescript" {
         ];
         function createCodeFixActionWithoutFixAll(fixName: string, changes: FileTextChanges[], description: DiagnosticAndArguments): CodeFixAction;
         function createCodeFixAction(fixName: string, changes: FileTextChanges[], description: DiagnosticAndArguments, fixId: {}, fixAllDescription: DiagnosticAndArguments, command?: CodeActionCommand): CodeFixAction;
+        function createCodeFixActionMaybeFixAll(fixName: string, changes: FileTextChanges[], description: DiagnosticAndArguments, fixId?: {}, fixAllDescription?: DiagnosticAndArguments, command?: CodeActionCommand): CodeFixAction;
         function registerCodeFix(reg: CodeFixRegistration): void;
         function getSupportedErrorCodes(): string[];
         function getFixes(context: CodeFixContext): readonly CodeFixAction[];
@@ -16050,19 +16448,23 @@ declare module "typescript" {
             writeFixes: (changeTracker: textChanges.ChangeTracker) => void;
         }
         function createImportAdder(sourceFile: SourceFile, program: Program, preferences: UserPreferences, host: LanguageServiceHost): ImportAdder;
-        enum ImportKind {
-            Named = 0,
-            Default = 1,
-            Namespace = 2,
-            CommonJS = 3
-        }
         function getImportCompletionAction(exportedSymbol: Symbol, moduleSymbol: Symbol, sourceFile: SourceFile, symbolName: string, host: LanguageServiceHost, program: Program, formatContext: formatting.FormatContext, position: number, preferences: UserPreferences): {
             readonly moduleSpecifier: string;
             readonly codeAction: CodeAction;
         };
-        function forEachExternalModuleToImportFrom(program: Program, host: LanguageServiceHost, from: SourceFile, filterByPackageJson: boolean, useAutoImportProvider: boolean, cb: (module: Symbol, moduleFile: SourceFile | undefined, program: Program, isFromPackageJson: boolean) => void): void;
+        function getModuleSpecifierForBestExportInfo(exportInfo: readonly SymbolExportInfo[], importingFile: SourceFile, program: Program, host: LanguageServiceHost, preferences: UserPreferences): {
+            exportInfo?: SymbolExportInfo;
+            moduleSpecifier: string;
+        };
+        function getSymbolToExportInfoMap(importingFile: SourceFile, host: LanguageServiceHost, program: Program): MultiMap<string, SymbolExportInfo>;
+        function getImportKind(importingFile: SourceFile, exportKind: ExportKind, compilerOptions: CompilerOptions): ImportKind;
+        function forEachExternalModuleToImportFrom(program: Program, host: LanguageServiceHost, useAutoImportProvider: boolean, cb: (module: Symbol, moduleFile: SourceFile | undefined, program: Program, isFromPackageJson: boolean) => void): void;
         function moduleSymbolToValidIdentifier(moduleSymbol: Symbol, target: ScriptTarget | undefined): string;
         function moduleSpecifierToValidIdentifier(moduleSpecifier: string, target: ScriptTarget | undefined): string;
+    }
+}
+declare module "typescript" {
+    namespace codefix {
     }
 }
 declare module "typescript" {
@@ -16380,10 +16782,10 @@ declare module "typescript" {
         /**
          * getRangeToExtract takes a span inside a text file and returns either an expression or an array
          * of statements representing the minimum set of nodes needed to extract the entire span. This
-         * process may fail, in which case a set of errors is returned instead (these are currently
-         * not shown to the user, but can be used by us diagnostically)
+         * process may fail, in which case a set of errors is returned instead. These errors are shown to
+         * users if they have the provideRefactorNotApplicableReason option set.
          */
-        function getRangeToExtract(sourceFile: SourceFile, span: TextSpan, considerEmptySpans?: boolean): RangeToExtract;
+        function getRangeToExtract(sourceFile: SourceFile, span: TextSpan, invoked?: boolean): RangeToExtract;
         enum Usage {
             Read = 1,
             Write = 2
@@ -16593,7 +16995,7 @@ declare module "typescript" {
         getEncodedSyntacticClassifications(fileName: string, start: number, length: number): string;
         getEncodedSemanticClassifications(fileName: string, start: number, length: number, format?: SemanticClassificationFormat): string;
         getCompletionsAtPosition(fileName: string, position: number, preferences: UserPreferences | undefined): string;
-        getCompletionEntryDetails(fileName: string, position: number, entryName: string, formatOptions: string | undefined, source: string | undefined, preferences: UserPreferences | undefined): string;
+        getCompletionEntryDetails(fileName: string, position: number, entryName: string, formatOptions: string | undefined, source: string | undefined, preferences: UserPreferences | undefined, data: CompletionEntryData | undefined): string;
         getQuickInfoAtPosition(fileName: string, position: number): string;
         getNameOrDottedNameSpan(fileName: string, startPos: number, endPos: number): string;
         getBreakpointStatementAtPosition(fileName: string, position: number): string;
@@ -16794,7 +17196,7 @@ declare module "typescript" {
     /** @deprecated Use `factory.createRegularExpressionLiteral` or the factory supplied by your transformation context instead. */
     const createRegularExpressionLiteral: (text: string) => RegularExpressionLiteral;
     /** @deprecated Use `factory.createLoopVariable` or the factory supplied by your transformation context instead. */
-    const createLoopVariable: () => Identifier;
+    const createLoopVariable: (reservedInNestedScopes?: boolean | undefined) => Identifier;
     /** @deprecated Use `factory.createUniqueName` or the factory supplied by your transformation context instead. */
     const createUniqueName: (text: string, flags?: GeneratedIdentifierFlags | undefined) => Identifier;
     /** @deprecated Use `factory.createPrivateIdentifier` or the factory supplied by your transformation context instead. */
@@ -16966,13 +17368,13 @@ declare module "typescript" {
     /** @deprecated Use `factory.updateObjectLiteralExpression` or the factory supplied by your transformation context instead. */
     const updateObjectLiteral: (node: ObjectLiteralExpression, properties: readonly ObjectLiteralElementLike[]) => ObjectLiteralExpression;
     /** @deprecated Use `factory.createPropertyAccessExpression` or the factory supplied by your transformation context instead. */
-    const createPropertyAccess: (expression: Expression, name: string | Identifier | PrivateIdentifier) => PropertyAccessExpression;
+    const createPropertyAccess: (expression: Expression, name: string | MemberName) => PropertyAccessExpression;
     /** @deprecated Use `factory.updatePropertyAccessExpression` or the factory supplied by your transformation context instead. */
-    const updatePropertyAccess: (node: PropertyAccessExpression, expression: Expression, name: Identifier | PrivateIdentifier) => PropertyAccessExpression;
+    const updatePropertyAccess: (node: PropertyAccessExpression, expression: Expression, name: MemberName) => PropertyAccessExpression;
     /** @deprecated Use `factory.createPropertyAccessChain` or the factory supplied by your transformation context instead. */
-    const createPropertyAccessChain: (expression: Expression, questionDotToken: QuestionDotToken | undefined, name: string | Identifier | PrivateIdentifier) => PropertyAccessChain;
+    const createPropertyAccessChain: (expression: Expression, questionDotToken: QuestionDotToken | undefined, name: string | MemberName) => PropertyAccessChain;
     /** @deprecated Use `factory.updatePropertyAccessChain` or the factory supplied by your transformation context instead. */
-    const updatePropertyAccessChain: (node: PropertyAccessChain, expression: Expression, questionDotToken: QuestionDotToken | undefined, name: Identifier | PrivateIdentifier) => PropertyAccessChain;
+    const updatePropertyAccessChain: (node: PropertyAccessChain, expression: Expression, questionDotToken: QuestionDotToken | undefined, name: MemberName) => PropertyAccessChain;
     /** @deprecated Use `factory.createElementAccessExpression` or the factory supplied by your transformation context instead. */
     const createElementAccess: (expression: Expression, index: number | Expression) => ElementAccessExpression;
     /** @deprecated Use `factory.updateElementAccessExpression` or the factory supplied by your transformation context instead. */
@@ -17242,51 +17644,51 @@ declare module "typescript" {
     /** @deprecated Use `factory.createJSDocTypeExpression` or the factory supplied by your transformation context instead. */
     const createJSDocTypeExpression: (type: TypeNode) => JSDocTypeExpression;
     /** @deprecated Use `factory.createJSDocTypeTag` or the factory supplied by your transformation context instead. */
-    const createJSDocTypeTag: (tagName: Identifier | undefined, typeExpression: JSDocTypeExpression, comment?: string | undefined) => JSDocTypeTag;
+    const createJSDocTypeTag: (tagName: Identifier | undefined, typeExpression: JSDocTypeExpression, comment?: string | NodeArray<JSDocText | JSDocLink> | undefined) => JSDocTypeTag;
     /** @deprecated Use `factory.createJSDocReturnTag` or the factory supplied by your transformation context instead. */
-    const createJSDocReturnTag: (tagName: Identifier | undefined, typeExpression?: JSDocTypeExpression | undefined, comment?: string | undefined) => JSDocReturnTag;
+    const createJSDocReturnTag: (tagName: Identifier | undefined, typeExpression?: JSDocTypeExpression | undefined, comment?: string | NodeArray<JSDocText | JSDocLink> | undefined) => JSDocReturnTag;
     /** @deprecated Use `factory.createJSDocThisTag` or the factory supplied by your transformation context instead. */
-    const createJSDocThisTag: (tagName: Identifier | undefined, typeExpression: JSDocTypeExpression, comment?: string | undefined) => JSDocThisTag;
+    const createJSDocThisTag: (tagName: Identifier | undefined, typeExpression: JSDocTypeExpression, comment?: string | NodeArray<JSDocText | JSDocLink> | undefined) => JSDocThisTag;
     /** @deprecated Use `factory.createJSDocComment` or the factory supplied by your transformation context instead. */
-    const createJSDocComment: (comment?: string | undefined, tags?: readonly JSDocTag[] | undefined) => JSDoc;
+    const createJSDocComment: (comment?: string | NodeArray<JSDocText | JSDocLink> | undefined, tags?: readonly JSDocTag[] | undefined) => JSDoc;
     /** @deprecated Use `factory.createJSDocParameterTag` or the factory supplied by your transformation context instead. */
-    const createJSDocParameterTag: (tagName: Identifier | undefined, name: EntityName, isBracketed: boolean, typeExpression?: JSDocTypeExpression | undefined, isNameFirst?: boolean | undefined, comment?: string | undefined) => JSDocParameterTag;
+    const createJSDocParameterTag: (tagName: Identifier | undefined, name: EntityName, isBracketed: boolean, typeExpression?: JSDocTypeExpression | undefined, isNameFirst?: boolean | undefined, comment?: string | NodeArray<JSDocText | JSDocLink> | undefined) => JSDocParameterTag;
     /** @deprecated Use `factory.createJSDocClassTag` or the factory supplied by your transformation context instead. */
-    const createJSDocClassTag: (tagName: Identifier | undefined, comment?: string | undefined) => JSDocClassTag;
+    const createJSDocClassTag: (tagName: Identifier | undefined, comment?: string | NodeArray<JSDocText | JSDocLink> | undefined) => JSDocClassTag;
     /** @deprecated Use `factory.createJSDocAugmentsTag` or the factory supplied by your transformation context instead. */
     const createJSDocAugmentsTag: (tagName: Identifier | undefined, className: ExpressionWithTypeArguments & {
         readonly expression: Identifier | PropertyAccessEntityNameExpression;
-    }, comment?: string | undefined) => JSDocAugmentsTag;
+    }, comment?: string | NodeArray<JSDocText | JSDocLink> | undefined) => JSDocAugmentsTag;
     /** @deprecated Use `factory.createJSDocEnumTag` or the factory supplied by your transformation context instead. */
-    const createJSDocEnumTag: (tagName: Identifier | undefined, typeExpression: JSDocTypeExpression, comment?: string | undefined) => JSDocEnumTag;
+    const createJSDocEnumTag: (tagName: Identifier | undefined, typeExpression: JSDocTypeExpression, comment?: string | NodeArray<JSDocText | JSDocLink> | undefined) => JSDocEnumTag;
     /** @deprecated Use `factory.createJSDocTemplateTag` or the factory supplied by your transformation context instead. */
-    const createJSDocTemplateTag: (tagName: Identifier | undefined, constraint: JSDocTypeExpression | undefined, typeParameters: readonly TypeParameterDeclaration[], comment?: string | undefined) => JSDocTemplateTag;
+    const createJSDocTemplateTag: (tagName: Identifier | undefined, constraint: JSDocTypeExpression | undefined, typeParameters: readonly TypeParameterDeclaration[], comment?: string | NodeArray<JSDocText | JSDocLink> | undefined) => JSDocTemplateTag;
     /** @deprecated Use `factory.createJSDocTypedefTag` or the factory supplied by your transformation context instead. */
-    const createJSDocTypedefTag: (tagName: Identifier | undefined, typeExpression?: JSDocTypeLiteral | JSDocTypeExpression | undefined, fullName?: Identifier | JSDocNamespaceDeclaration | undefined, comment?: string | undefined) => JSDocTypedefTag;
+    const createJSDocTypedefTag: (tagName: Identifier | undefined, typeExpression?: JSDocTypeLiteral | JSDocTypeExpression | undefined, fullName?: Identifier | JSDocNamespaceDeclaration | undefined, comment?: string | NodeArray<JSDocText | JSDocLink> | undefined) => JSDocTypedefTag;
     /** @deprecated Use `factory.createJSDocCallbackTag` or the factory supplied by your transformation context instead. */
-    const createJSDocCallbackTag: (tagName: Identifier | undefined, typeExpression: JSDocSignature, fullName?: Identifier | JSDocNamespaceDeclaration | undefined, comment?: string | undefined) => JSDocCallbackTag;
+    const createJSDocCallbackTag: (tagName: Identifier | undefined, typeExpression: JSDocSignature, fullName?: Identifier | JSDocNamespaceDeclaration | undefined, comment?: string | NodeArray<JSDocText | JSDocLink> | undefined) => JSDocCallbackTag;
     /** @deprecated Use `factory.createJSDocSignature` or the factory supplied by your transformation context instead. */
     const createJSDocSignature: (typeParameters: readonly JSDocTemplateTag[] | undefined, parameters: readonly JSDocParameterTag[], type?: JSDocReturnTag | undefined) => JSDocSignature;
     /** @deprecated Use `factory.createJSDocPropertyTag` or the factory supplied by your transformation context instead. */
-    const createJSDocPropertyTag: (tagName: Identifier | undefined, name: EntityName, isBracketed: boolean, typeExpression?: JSDocTypeExpression | undefined, isNameFirst?: boolean | undefined, comment?: string | undefined) => JSDocPropertyTag;
+    const createJSDocPropertyTag: (tagName: Identifier | undefined, name: EntityName, isBracketed: boolean, typeExpression?: JSDocTypeExpression | undefined, isNameFirst?: boolean | undefined, comment?: string | NodeArray<JSDocText | JSDocLink> | undefined) => JSDocPropertyTag;
     /** @deprecated Use `factory.createJSDocTypeLiteral` or the factory supplied by your transformation context instead. */
     const createJSDocTypeLiteral: (jsDocPropertyTags?: readonly JSDocPropertyLikeTag[] | undefined, isArrayType?: boolean | undefined) => JSDocTypeLiteral;
     /** @deprecated Use `factory.createJSDocImplementsTag` or the factory supplied by your transformation context instead. */
     const createJSDocImplementsTag: (tagName: Identifier | undefined, className: ExpressionWithTypeArguments & {
         readonly expression: Identifier | PropertyAccessEntityNameExpression;
-    }, comment?: string | undefined) => JSDocImplementsTag;
+    }, comment?: string | NodeArray<JSDocText | JSDocLink> | undefined) => JSDocImplementsTag;
     /** @deprecated Use `factory.createJSDocAuthorTag` or the factory supplied by your transformation context instead. */
-    const createJSDocAuthorTag: (tagName: Identifier | undefined, comment?: string | undefined) => JSDocAuthorTag;
+    const createJSDocAuthorTag: (tagName: Identifier | undefined, comment?: string | NodeArray<JSDocText | JSDocLink> | undefined) => JSDocAuthorTag;
     /** @deprecated Use `factory.createJSDocPublicTag` or the factory supplied by your transformation context instead. */
-    const createJSDocPublicTag: (tagName: Identifier | undefined, comment?: string | undefined) => JSDocPublicTag;
+    const createJSDocPublicTag: (tagName: Identifier | undefined, comment?: string | NodeArray<JSDocText | JSDocLink> | undefined) => JSDocPublicTag;
     /** @deprecated Use `factory.createJSDocPrivateTag` or the factory supplied by your transformation context instead. */
-    const createJSDocPrivateTag: (tagName: Identifier | undefined, comment?: string | undefined) => JSDocPrivateTag;
+    const createJSDocPrivateTag: (tagName: Identifier | undefined, comment?: string | NodeArray<JSDocText | JSDocLink> | undefined) => JSDocPrivateTag;
     /** @deprecated Use `factory.createJSDocProtectedTag` or the factory supplied by your transformation context instead. */
-    const createJSDocProtectedTag: (tagName: Identifier | undefined, comment?: string | undefined) => JSDocProtectedTag;
+    const createJSDocProtectedTag: (tagName: Identifier | undefined, comment?: string | NodeArray<JSDocText | JSDocLink> | undefined) => JSDocProtectedTag;
     /** @deprecated Use `factory.createJSDocReadonlyTag` or the factory supplied by your transformation context instead. */
-    const createJSDocReadonlyTag: (tagName: Identifier | undefined, comment?: string | undefined) => JSDocReadonlyTag;
+    const createJSDocReadonlyTag: (tagName: Identifier | undefined, comment?: string | NodeArray<JSDocText | JSDocLink> | undefined) => JSDocReadonlyTag;
     /** @deprecated Use `factory.createJSDocUnknownTag` or the factory supplied by your transformation context instead. */
-    const createJSDocTag: (tagName: Identifier, comment?: string | undefined) => JSDocUnknownTag;
+    const createJSDocTag: (tagName: Identifier, comment?: string | NodeArray<JSDocText | JSDocLink> | undefined) => JSDocUnknownTag;
     /** @deprecated Use `factory.createJsxElement` or the factory supplied by your transformation context instead. */
     const createJsxElement: (openingElement: JsxOpeningElement, children: readonly JsxChild[], closingElement: JsxClosingElement) => JsxElement;
     /** @deprecated Use `factory.updateJsxElement` or the factory supplied by your transformation context instead. */
@@ -17542,4 +17944,8 @@ declare module "typescript" {
      */
     interface Map<T> extends ESMap<string, T> {
     }
+    /**
+     * @deprecated Use `isMemberName` instead.
+     */
+    const isIdentifierOrPrivateIdentifier: (node: Node) => node is MemberName;
 }

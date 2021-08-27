@@ -11212,6 +11212,7 @@ declare module "typescript" {
     export function containsIgnoredPath(path: string): boolean;
     export function getContainingNodeArray(node: Node): NodeArray<Node> | undefined;
     export function hasContextSensitiveParameters(node: FunctionLikeDeclaration): boolean;
+    export function isInfinityOrNaNString(name: string | __String): boolean;
     export {};
 }
 declare module "typescript" {
@@ -14789,7 +14790,7 @@ declare module "typescript" {
     interface InlayHint {
         text: string;
         position: number;
-        kind?: InlayHintKind;
+        kind: InlayHintKind;
         whitespaceBefore?: boolean;
         whitespaceAfter?: boolean;
     }

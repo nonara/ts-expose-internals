@@ -56,5 +56,5 @@ New types are added to the 'typescript' module via the
 
 ## Acknowledgments
 
-Thanks to [bararat](https://github.com/basarat) for his work on [byots](https://github.com/basarat/byots), which served
+Thanks to [basarat](https://github.com/basarat) for his work on [byots](https://github.com/basarat/byots), which served
 as the inspiration!

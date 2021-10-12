@@ -6,31 +6,19 @@ Expose TypeScript internal types by simply adding a development dependency.
 
 ## Setup
 
-1. Add dependency to package.json (set version to the same as your typescript version)
+1. Add aliased dependency to package.json (use the same version as your typescript version)
 
    ```jsonc
    {
      "devDependencies": {
        "typescript": "^3.9.6",
-       "ts-expose-internals": "^3.9.6"
+       // Note: The package is 'ts-expose-internals', but we are aliasing within the @types scope to make TS adopt it globally
+       "@types/ts-expose-internals": "npm:ts-expose-internals@3.9.6"
      }
    }
    ```
 
 2. Run `npm install` / `yarn install`
-
-3. Add the following line to your main index.ts
-
-   ```ts 
-   import {} from 'ts-expose-internals'
-   ```
-
-    _Notes:_
-    
-    - This line only needs to be added to one source file (it doesn't have to be main index), and the types will be 
-      recognized project-wide
-    - We include the empty `{} from` in order to make sure it does not get output in compiled source
-    - You might need to tell your linter to ignore the import line if it's set to flag empty imports
 
 ## Usage
 All internal types are now available within the primary typescript module

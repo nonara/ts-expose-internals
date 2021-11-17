@@ -4498,12 +4498,13 @@ declare module "typescript" {
         Simplifiable = 25165824,
         Singleton = 67358815,
         Narrowable = 536624127,
-        NotPrimitiveUnion = 468598819,
         IncludesMask = 205258751,
         IncludesMissingType = 262144,
         IncludesNonWideningType = 4194304,
         IncludesWildcard = 8388608,
-        IncludesEmptyObject = 16777216
+        IncludesEmptyObject = 16777216,
+        IncludesInstantiable = 33554432,
+        NotPrimitiveUnion = 36323363
     }
     export type DestructuringPattern = BindingPattern | ObjectLiteralExpression | ArrayLiteralExpression;
     export type TypeId = number;
@@ -11174,7 +11175,7 @@ declare module "typescript" {
     export function getFileMatcherPatterns(path: string, excludes: readonly string[] | undefined, includes: readonly string[] | undefined, useCaseSensitiveFileNames: boolean, currentDirectory: string): FileMatcherPatterns;
     export function getRegexFromPattern(pattern: string, useCaseSensitiveFileNames: boolean): RegExp;
     /** @param path directory of the tsconfig.json */
-    export function matchFiles(path: string, extensions: readonly string[] | undefined, excludes: readonly string[] | undefined, includes: readonly string[] | undefined, useCaseSensitiveFileNames: boolean, currentDirectory: string, depth: number | undefined, getFileSystemEntries: (path: string) => FileSystemEntries, realpath: (path: string) => string, directoryExists: (path: string) => boolean): string[];
+    export function matchFiles(path: string, extensions: readonly string[] | undefined, excludes: readonly string[] | undefined, includes: readonly string[] | undefined, useCaseSensitiveFileNames: boolean, currentDirectory: string, depth: number | undefined, getFileSystemEntries: (path: string) => FileSystemEntries, realpath: (path: string) => string): string[];
     export function ensureScriptKind(fileName: string, scriptKind: ScriptKind | undefined): ScriptKind;
     export function getScriptKindFromFileName(fileName: string): ScriptKind;
     /**
@@ -17465,11 +17466,16 @@ declare module "typescript" {
             host: LanguageServiceHost;
         }
         type AddNode = PropertyDeclaration | GetAccessorDeclaration | SetAccessorDeclaration | MethodDeclaration | FunctionExpression | ArrowFunction;
+        export enum PreserveOptionalFlags {
+            Method = 1,
+            Property = 2,
+            All = 3
+        }
         /**
          * `addClassElement` will not be called if we can't figure out a representation for `symbol` in `enclosingDeclaration`.
          * @param body If defined, this will be the body of the member node passed to `addClassElement`. Otherwise, the body will default to a stub.
          */
-        export function addNewNodeForMemberSymbol(symbol: Symbol, enclosingDeclaration: ClassLikeDeclaration, sourceFile: SourceFile, context: TypeConstructionContext, preferences: UserPreferences, importAdder: ImportAdder | undefined, addClassElement: (node: AddNode) => void, body: Block | undefined, isAmbient?: boolean): void;
+        export function addNewNodeForMemberSymbol(symbol: Symbol, enclosingDeclaration: ClassLikeDeclaration, sourceFile: SourceFile, context: TypeConstructionContext, preferences: UserPreferences, importAdder: ImportAdder | undefined, addClassElement: (node: AddNode) => void, body: Block | undefined, preserveOptional?: PreserveOptionalFlags, isAmbient?: boolean): void;
         export function createSignatureDeclarationFromSignature(kind: SyntaxKind.MethodDeclaration | SyntaxKind.FunctionExpression | SyntaxKind.ArrowFunction, context: TypeConstructionContext, quotePreference: QuotePreference, signature: Signature, body: Block | undefined, name: PropertyName | undefined, modifiers: NodeArray<Modifier> | undefined, optional: boolean | undefined, enclosingDeclaration: Node | undefined, importAdder: ImportAdder | undefined): MethodDeclaration | FunctionExpression | ArrowFunction | undefined;
         export function createSignatureDeclarationFromCallExpression(kind: SyntaxKind.MethodDeclaration | SyntaxKind.FunctionDeclaration, context: CodeFixContextBase, importAdder: ImportAdder, call: CallExpression, name: Identifier | string, modifierFlags: ModifierFlags, contextNode: Node): FunctionDeclaration | MethodDeclaration;
         export function typeToAutoImportableTypeNode(checker: TypeChecker, importAdder: ImportAdder, type: Type, contextNode: Node | undefined, scriptTarget: ScriptTarget, flags?: NodeBuilderFlags, tracker?: SymbolTracker): TypeNode | undefined;

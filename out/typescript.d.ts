@@ -12457,6 +12457,8 @@ declare module "typescript" {
         Exports = 8,
         ExportsPatternTrailers = 16,
         AllFeatures = 30,
+        Node12Default = 14,
+        NodeNextDefault = 30,
         EsmMode = 32
     }
     export function nodeModuleNameResolver(moduleName: string, containingFile: string, compilerOptions: CompilerOptions, host: ModuleResolutionHost, cache?: ModuleResolutionCache, redirectedReference?: ResolvedProjectReference): ResolvedModuleWithFailedLookupLocations;

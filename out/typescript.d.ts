@@ -4063,7 +4063,7 @@ declare module "typescript" {
     }
     export type TypePredicate = ThisTypePredicate | IdentifierTypePredicate | AssertsThisTypePredicate | AssertsIdentifierTypePredicate;
     export type AnyImportSyntax = ImportDeclaration | ImportEqualsDeclaration;
-    export type AnyImportOrRequire = AnyImportSyntax | RequireVariableDeclaration;
+    export type AnyImportOrRequire = AnyImportSyntax | VariableDeclarationInitializedTo<RequireOrImportCall>;
     export type AnyImportOrRequireStatement = AnyImportSyntax | RequireVariableStatement;
     export type AnyImportOrReExport = AnyImportSyntax | ExportDeclaration;
     export interface ValidImportTypeNode extends ImportTypeNode {
@@ -4084,14 +4084,14 @@ declare module "typescript" {
             StringLiteralLike
         ];
     };
-    export interface RequireVariableDeclaration extends VariableDeclaration {
-        readonly initializer: RequireOrImportCall;
+    export interface VariableDeclarationInitializedTo<T extends Expression> extends VariableDeclaration {
+        readonly initializer: T;
     }
     export interface RequireVariableStatement extends VariableStatement {
         readonly declarationList: RequireVariableDeclarationList;
     }
     export interface RequireVariableDeclarationList extends VariableDeclarationList {
-        readonly declarations: NodeArray<RequireVariableDeclaration>;
+        readonly declarations: NodeArray<VariableDeclarationInitializedTo<RequireOrImportCall>>;
     }
     export type LateVisibilityPaintedStatement = AnyImportSyntax | VariableStatement | ClassDeclaration | FunctionDeclaration | ModuleDeclaration | TypeAliasDeclaration | InterfaceDeclaration | EnumDeclaration;
     export interface SymbolVisibilityResult {
@@ -10506,7 +10506,11 @@ declare module "typescript" {
      * Returns true if the node is a VariableDeclaration initialized to a require call (see `isRequireCall`).
      * This function does not test if the node is in a JavaScript file or not.
      */
-    export function isRequireVariableDeclaration(node: Node): node is RequireVariableDeclaration;
+    export function isVariableDeclarationInitializedToRequire(node: Node): node is VariableDeclarationInitializedTo<RequireOrImportCall>;
+    /**
+     * Like {@link isVariableDeclarationInitializedToRequire} but allows things like `require("...").foo.bar` or `require("...")["baz"]`.
+     */
+    export function isVariableDeclarationInitializedToBareOrAccessedRequire(node: Node): node is VariableDeclarationInitializedTo<RequireOrImportCall | AccessExpression>;
     export function isRequireVariableStatement(node: Node): node is RequireVariableStatement;
     export function isSingleOrDoubleQuote(charCode: number): boolean;
     export function isStringDoubleQuoted(str: StringLiteralLike, sourceFile: SourceFile): boolean;
@@ -16278,7 +16282,7 @@ declare module "typescript" {
         /** Map from symbol id -> SortTextId. */
         type SymbolSortTextIdMap = (SortTextId | undefined)[];
         export function getCompletionsAtPosition(host: LanguageServiceHost, program: Program, log: Log, sourceFile: SourceFile, position: number, preferences: UserPreferences, triggerCharacter: CompletionsTriggerCharacter | undefined, completionKind: CompletionTriggerKind | undefined, cancellationToken: CancellationToken): CompletionInfo | undefined;
-        export function getCompletionEntriesFromSymbols(symbols: readonly Symbol[], entries: Push<CompletionEntry>, replacementToken: Node | undefined, contextToken: Node | undefined, location: Node, sourceFile: SourceFile, host: LanguageServiceHost, program: Program, target: ScriptTarget, log: Log, kind: CompletionKind, preferences: UserPreferences, compilerOptions: CompilerOptions, isTypeOnlyLocation?: boolean, propertyAccessToConvert?: PropertyAccessExpression, jsxIdentifierExpected?: boolean, isJsxInitializer?: IsJsxInitializer, importCompletionNode?: Node, recommendedCompletion?: Symbol, symbolToOriginInfoMap?: SymbolOriginInfoMap, symbolToSortTextIdMap?: SymbolSortTextIdMap): UniqueNameSet;
+        export function getCompletionEntriesFromSymbols(symbols: readonly Symbol[], entries: Push<CompletionEntry>, replacementToken: Node | undefined, contextToken: Node | undefined, location: Node, sourceFile: SourceFile, host: LanguageServiceHost, program: Program, target: ScriptTarget, log: Log, kind: CompletionKind, preferences: UserPreferences, compilerOptions: CompilerOptions, isTypeOnlyLocation?: boolean, propertyAccessToConvert?: PropertyAccessExpression, jsxIdentifierExpected?: boolean, isJsxInitializer?: IsJsxInitializer, importCompletionNode?: Node, recommendedCompletion?: Symbol, symbolToOriginInfoMap?: SymbolOriginInfoMap, symbolToSortTextIdMap?: SymbolSortTextIdMap, isJsxIdentifierExpected?: boolean, isRightOfOpenTag?: boolean): UniqueNameSet;
         export interface CompletionEntryIdentifier {
             name: string;
             source?: string;

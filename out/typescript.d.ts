@@ -4477,6 +4477,7 @@ declare module "typescript" {
         EnumLike = 1056,
         ESSymbolLike = 12288,
         VoidLike = 49152,
+        DefinitelyNonNullable = 470302716,
         DisjointDomains = 469892092,
         UnionOrIntersection = 3145728,
         StructuredType = 3670016,
@@ -8173,6 +8174,8 @@ declare module "typescript" {
         Property_0_cannot_have_an_initializer_because_it_is_marked_abstract: DiagnosticMessage;
         An_index_signature_parameter_type_must_be_string_number_symbol_or_a_template_literal_type: DiagnosticMessage;
         Cannot_use_export_import_on_a_type_or_type_only_namespace_when_the_isolatedModules_flag_is_provided: DiagnosticMessage;
+        Decorator_function_return_type_0_is_not_assignable_to_type_1: DiagnosticMessage;
+        Decorator_function_return_type_is_0_but_is_expected_to_be_void_or_any: DiagnosticMessage;
         with_statements_are_not_allowed_in_an_async_function_block: DiagnosticMessage;
         await_expressions_are_only_allowed_within_async_functions_and_at_the_top_levels_of_modules: DiagnosticMessage;
         Did_you_mean_to_use_a_Colon_An_can_only_follow_a_property_name_when_the_containing_object_literal_is_part_of_a_destructuring_pattern: DiagnosticMessage;

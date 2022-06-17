@@ -17593,6 +17593,9 @@ declare module "typescript" {
 declare module "typescript" {
     namespace codefix {
         const importFixName = "import";
+        /**
+         * Computes multiple import additions to a file and writes them to a ChangeTracker.
+         */
         interface ImportAdder {
             hasFixes(): boolean;
             addImportFromDiagnostic: (diagnostic: DiagnosticWithLocation, context: CodeFixContextBase) => void;
@@ -17600,16 +17603,22 @@ declare module "typescript" {
             writeFixes: (changeTracker: textChanges.ChangeTracker) => void;
         }
         function createImportAdder(sourceFile: SourceFile, program: Program, preferences: UserPreferences, host: LanguageServiceHost): ImportAdder;
+        /**
+         * Computes module specifiers for multiple import additions to a file.
+         */
+        interface ImportSpecifierResolver {
+            getModuleSpecifierForBestExportInfo(exportInfo: readonly SymbolExportInfo[], symbolName: string, position: number, isValidTypeOnlyUseSite: boolean, fromCacheOnly?: boolean): {
+                exportInfo?: SymbolExportInfo;
+                moduleSpecifier: string;
+                computedWithoutCacheCount: number;
+            } | undefined;
+        }
+        function createImportSpecifierResolver(importingFile: SourceFile, program: Program, host: LanguageServiceHost, preferences: UserPreferences): ImportSpecifierResolver;
         function getImportCompletionAction(targetSymbol: Symbol, moduleSymbol: Symbol, sourceFile: SourceFile, symbolName: string, isJsxTagName: boolean, host: LanguageServiceHost, program: Program, formatContext: formatting.FormatContext, position: number, preferences: UserPreferences): {
             readonly moduleSpecifier: string;
             readonly codeAction: CodeAction;
         };
         function getPromoteTypeOnlyCompletionAction(sourceFile: SourceFile, symbolToken: Identifier, program: Program, host: LanguageServiceHost, formatContext: formatting.FormatContext, preferences: UserPreferences): CodeAction | undefined;
-        function getModuleSpecifierForBestExportInfo(exportInfo: readonly SymbolExportInfo[], symbolName: string, position: number, isValidTypeOnlyUseSite: boolean, importingFile: SourceFile, program: Program, host: LanguageServiceHost, preferences: UserPreferences, packageJsonImportFilter?: PackageJsonImportFilter, fromCacheOnly?: boolean): {
-            exportInfo?: SymbolExportInfo;
-            moduleSpecifier: string;
-            computedWithoutCacheCount: number;
-        } | undefined;
         /**
          * @param forceImportKeyword Indicates that the user has already typed `import`, so the result must start with `import`.
          * (In other words, do not allow `const x = require("...")` for JS files.)

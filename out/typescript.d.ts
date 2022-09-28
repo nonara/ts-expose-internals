@@ -12858,6 +12858,9 @@ declare module "typescript" {
     export function getTemporaryModuleResolutionState(packageJsonInfoCache: PackageJsonInfoCache | undefined, host: ModuleResolutionHost, options: CompilerOptions): ModuleResolutionState;
     export interface PackageJsonInfo {
         packageDirectory: string;
+        contents: PackageJsonInfoContents;
+    }
+    export interface PackageJsonInfoContents {
         packageJsonContent: PackageJsonPathFields;
         versionPaths: VersionPaths | undefined;
         /** false: resolved to nothing. undefined: not yet resolved */
@@ -12866,7 +12869,7 @@ declare module "typescript" {
     /**
      * A function for locating the package.json scope for a given path
      */
-    export function getPackageScopeForPath(fileName: Path, state: ModuleResolutionState): PackageJsonInfo | undefined;
+    export function getPackageScopeForPath(fileName: string, state: ModuleResolutionState): PackageJsonInfo | undefined;
     export function getPackageJsonInfo(packageDirectory: string, onlyRecordFailures: boolean, state: ModuleResolutionState): PackageJsonInfo | undefined;
     export function parsePackageName(moduleName: string): {
         packageName: string;
@@ -13689,7 +13692,7 @@ declare module "typescript" {
      * @returns `undefined` if the path has no relevant implied format, `ModuleKind.ESNext` for esm format, and `ModuleKind.CommonJS` for cjs format
      */
     export function getImpliedNodeFormatForFile(fileName: Path, packageJsonInfoCache: PackageJsonInfoCache | undefined, host: ModuleResolutionHost, options: CompilerOptions): ModuleKind.ESNext | ModuleKind.CommonJS | undefined;
-    export function getImpliedNodeFormatForFileWorker(fileName: Path, packageJsonInfoCache: PackageJsonInfoCache | undefined, host: ModuleResolutionHost, options: CompilerOptions): ModuleKind.CommonJS | ModuleKind.ESNext | Partial<CreateSourceFileOptions> | undefined;
+    export function getImpliedNodeFormatForFileWorker(fileName: string, packageJsonInfoCache: PackageJsonInfoCache | undefined, host: ModuleResolutionHost, options: CompilerOptions): ModuleKind.CommonJS | ModuleKind.ESNext | Partial<CreateSourceFileOptions> | undefined;
     /** @internal */
     export const plainJSErrors: Set<number>;
     /**

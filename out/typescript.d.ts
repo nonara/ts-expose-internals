@@ -14460,9 +14460,7 @@ declare module "typescript" {
         diagnostics?: boolean;
     }): WatchFactory<WatchType, Y>;
     export function createCompilerHostFromProgramHost(host: ProgramHost<any>, getCompilerOptions: () => CompilerOptions, directoryStructureHost?: DirectoryStructureHost): CompilerHost;
-    export function setGetSourceFileAsHashVersioned(compilerHost: CompilerHost, host: {
-        createHash?(data: string): string;
-    }): void;
+    export function setGetSourceFileAsHashVersioned(compilerHost: CompilerHost): void;
     /**
      * Creates the watch compiler host that can be extended with config file or root file names and options host
      */

@@ -614,11 +614,7 @@ declare module "typescript" {
      * Compare two TextSpans, first by `start`, then by `length`.
      */
     function compareTextSpans(a: Partial<TextSpan> | undefined, b: Partial<TextSpan> | undefined): Comparison;
-    function min<T>(items: readonly [
-        T,
-        ...T[]
-    ], compare: Comparer<T>): T;
-    function min<T>(items: readonly T[], compare: Comparer<T>): T | undefined;
+    function min<T>(a: T, b: T, compare: Comparer<T>): T;
     /**
      * Compare two strings using a case-insensitive ordinal comparison.
      *
@@ -880,17 +876,10 @@ declare module "typescript" {
         readonly prerelease: readonly string[];
         readonly build: readonly string[];
         constructor(text: string);
-        constructor(major: number, minor?: number, patch?: number, prerelease?: string | readonly string[], build?: string | readonly string[]);
+        constructor(major: number, minor?: number, patch?: number, prerelease?: string, build?: string);
         static tryParse(text: string): Version | undefined;
         compareTo(other: Version | undefined): Comparison;
         increment(field: "major" | "minor" | "patch"): Version;
-        with(fields: {
-            major?: number;
-            minor?: number;
-            patch?: number;
-            prerelease?: string | readonly string[];
-            build?: string | readonly string[];
-        }): Version;
         toString(): string;
     }
     /**
@@ -900,10 +889,6 @@ declare module "typescript" {
         private _alternatives;
         constructor(spec: string);
         static tryParse(text: string): VersionRange | undefined;
-        /**
-         * Tests whether a version matches the range. This is equivalent to `satisfies(version, range, { includePrerelease: true })`.
-         * in `node-semver`.
-         */
         test(version: Version | string): boolean;
         toString(): string;
     }
@@ -1676,7 +1661,6 @@ declare module "typescript" {
         isInJSDocNamespace?: boolean;
         typeArguments?: NodeArray<TypeNode | TypeParameterDeclaration>;
         jsdocDotPos?: number;
-        hasExtendedUnicodeEscape?: boolean;
     }
     export interface TransientIdentifier extends Identifier {
         resolvedSymbol: Symbol;
@@ -3935,7 +3919,6 @@ declare module "typescript" {
         createPromiseType(type: Type): Type;
         getPromiseType(): Type;
         getPromiseLikeType(): Type;
-        getAsyncIterableType(): Type | undefined;
         isTypeAssignableTo(source: Type, target: Type): boolean;
         createAnonymousType(symbol: Symbol | undefined, members: SymbolTable, callSignatures: Signature[], constructSignatures: Signature[], indexInfos: IndexInfo[]): Type;
         createSignature(declaration: SignatureDeclaration | undefined, typeParameters: readonly TypeParameter[] | undefined, thisParameter: Symbol | undefined, parameters: readonly Symbol[], resolvedReturnType: Type, typePredicate: TypePredicate | undefined, minArgumentCount: number, flags: SignatureFlags): Signature;
@@ -4521,8 +4504,8 @@ declare module "typescript" {
         SuperInstance = 256,
         SuperStatic = 512,
         ContextChecked = 1024,
-        MethodWithSuperPropertyAccessInAsync = 2048,
-        MethodWithSuperPropertyAssignmentInAsync = 4096,
+        AsyncMethodWithSuper = 2048,
+        AsyncMethodWithSuperBinding = 4096,
         CaptureArguments = 8192,
         EnumValuesComputed = 16384,
         LexicalModuleMergesWithClass = 32768,
@@ -4563,7 +4546,7 @@ declare module "typescript" {
         deferredNodes?: Set<Node>;
         capturedBlockScopeBindings?: Symbol[];
         outerTypeParameters?: TypeParameter[];
-        isExhaustive?: boolean | 0;
+        isExhaustive?: boolean;
         skipDirectInference?: true;
         declarationRequiresScopeChange?: boolean;
         serializedTypes?: ESMap<string, TypeNode & {
@@ -6180,7 +6163,7 @@ declare module "typescript" {
         createStringLiteralFromNode(sourceNode: PropertyNameLiteral | PrivateIdentifier, isSingleQuote?: boolean): StringLiteral;
         createRegularExpressionLiteral(text: string): RegularExpressionLiteral;
         createIdentifier(text: string): Identifier;
-        createIdentifier(text: string, typeArguments?: readonly (TypeNode | TypeParameterDeclaration)[], originalKeywordKind?: SyntaxKind, hasExtendedUnicodeEscape?: boolean): Identifier;
+        createIdentifier(text: string, typeArguments?: readonly (TypeNode | TypeParameterDeclaration)[], originalKeywordKind?: SyntaxKind): Identifier;
         updateIdentifier(node: Identifier, typeArguments: NodeArray<TypeNode | TypeParameterDeclaration> | undefined): Identifier;
         /**
          * Create a unique temporary variable.
@@ -7636,10 +7619,11 @@ declare module "typescript" {
         tscWatchFile: string | undefined;
         useNonPollingWatchers?: boolean;
         tscWatchDirectory: string | undefined;
+        defaultWatchFileKind: System["defaultWatchFileKind"];
         inodeWatching: boolean;
         sysLog: (s: string) => void;
     }
-    export function createSystemWatchFunctions({ pollingWatchFileWorker, getModifiedTime, setTimeout, clearTimeout, fsWatchWorker, fileSystemEntryExists, useCaseSensitiveFileNames, getCurrentDirectory, fsSupportsRecursiveFsWatch, getAccessibleSortedChildDirectories, realpath, tscWatchFile, useNonPollingWatchers, tscWatchDirectory, inodeWatching, sysLog, }: CreateSystemWatchFunctions): {
+    export function createSystemWatchFunctions({ pollingWatchFileWorker, getModifiedTime, setTimeout, clearTimeout, fsWatchWorker, fileSystemEntryExists, useCaseSensitiveFileNames, getCurrentDirectory, fsSupportsRecursiveFsWatch, getAccessibleSortedChildDirectories, realpath, tscWatchFile, useNonPollingWatchers, tscWatchDirectory, defaultWatchFileKind, inodeWatching, sysLog, }: CreateSystemWatchFunctions): {
         watchFile: HostWatchFile;
         watchDirectory: HostWatchDirectory;
     };
@@ -7774,6 +7758,7 @@ declare module "typescript" {
         base64encode?(input: string): string;
         bufferFrom?(input: string, encoding?: string): Buffer;
         require?(baseDir: string, moduleName: string): RequireResult;
+        defaultWatchFileKind?(): WatchFileKind | undefined;
         now?(): Date;
         disableUseFileVersionAsSignature?: boolean;
         storeFilesChangingSignatureDuringEmit?: boolean;
@@ -9522,10 +9507,6 @@ declare module "typescript" {
         Project_0_is_out_of_date_because_buildinfo_file_1_indicates_that_some_of_the_changes_were_not_emitted: DiagnosticMessage;
         Project_0_is_up_to_date_but_needs_to_update_timestamps_of_output_files_that_are_older_than_input_files: DiagnosticMessage;
         Project_0_is_out_of_date_because_there_was_error_reading_file_1: DiagnosticMessage;
-        Resolving_in_0_mode_with_conditions_1: DiagnosticMessage;
-        Matched_0_condition_1: DiagnosticMessage;
-        Using_0_subpath_1_with_target_2: DiagnosticMessage;
-        Saw_non_matching_condition_0: DiagnosticMessage;
         The_expected_type_comes_from_property_0_which_is_declared_here_on_type_1: DiagnosticMessage;
         The_expected_type_comes_from_this_index_signature: DiagnosticMessage;
         The_expected_type_comes_from_the_return_type_of_this_signature: DiagnosticMessage;
@@ -9842,8 +9823,6 @@ declare module "typescript" {
         Remove_type_from_import_of_0_from_1: DiagnosticMessage;
         Add_import_from_0: DiagnosticMessage;
         Update_import_from_0: DiagnosticMessage;
-        Export_0_from_module_1: DiagnosticMessage;
-        Export_all_referenced_locals: DiagnosticMessage;
         Convert_function_to_an_ES2015_class: DiagnosticMessage;
         Convert_0_to_1_in_0: DiagnosticMessage;
         Extract_to_0_in_1: DiagnosticMessage;
@@ -11661,8 +11640,6 @@ declare module "typescript" {
     }
     export function getNodeModulePathParts(fullPath: string): NodeModulePathParts | undefined;
     export function getParameterTypeNode(parameter: ParameterDeclaration | JSDocParameterTag): TypeNode | undefined;
-    export function isTypeDeclaration(node: Node): node is TypeParameterDeclaration | ClassDeclaration | InterfaceDeclaration | TypeAliasDeclaration | JSDocTypedefTag | JSDocCallbackTag | JSDocEnumTag | EnumDeclaration | ImportClause | ImportSpecifier | ExportSpecifier;
-    export function canHaveExportModifier(node: Node): node is Extract<HasModifiers, Statement>;
     export {};
 }
 declare module "typescript" {
@@ -14460,7 +14437,9 @@ declare module "typescript" {
         diagnostics?: boolean;
     }): WatchFactory<WatchType, Y>;
     export function createCompilerHostFromProgramHost(host: ProgramHost<any>, getCompilerOptions: () => CompilerOptions, directoryStructureHost?: DirectoryStructureHost): CompilerHost;
-    export function setGetSourceFileAsHashVersioned(compilerHost: CompilerHost): void;
+    export function setGetSourceFileAsHashVersioned(compilerHost: CompilerHost, host: {
+        createHash?(data: string): string;
+    }): void;
     /**
      * Creates the watch compiler host that can be extended with config file or root file names and options host
      */
@@ -14531,9 +14510,9 @@ declare module "typescript" {
         /** If provided, called with Diagnostic message that informs about change in watch status */
         onWatchStatusChange?(diagnostic: Diagnostic, newLine: string, options: CompilerOptions, errorCount?: number): void;
         /** Used to watch changes in source files, missing files needed to update the program or config file */
-        watchFile(path: string, callback: FileWatcherCallback, pollingInterval?: number, options?: WatchOptions): FileWatcher;
+        watchFile(path: string, callback: FileWatcherCallback, pollingInterval?: number, options?: CompilerOptions): FileWatcher;
         /** Used to watch resolved module's failed lookup locations, config file specs, type roots where auto type reference directives are added */
-        watchDirectory(path: string, callback: DirectoryWatcherCallback, recursive?: boolean, options?: WatchOptions): FileWatcher;
+        watchDirectory(path: string, callback: DirectoryWatcherCallback, recursive?: boolean, options?: CompilerOptions): FileWatcher;
         /** If provided, will be used to set delayed compilation, so that multiple changes in short span are compiled together */
         setTimeout?(callback: (...args: any[]) => void, ms: number, ...args: any[]): any;
         /** If provided, will be used to reset existing delayed compilation */
@@ -15521,15 +15500,8 @@ declare module "typescript" {
         type: "file";
         fileName: string;
     }
-    enum OrganizeImportsMode {
-        All = "All",
-        SortAndCombine = "SortAndCombine",
-        RemoveUnused = "RemoveUnused"
-    }
     interface OrganizeImportsArgs extends CombinedCodeFixScope {
-        /** @deprecated Use `mode` instead */
         skipDestructiveCodeActions?: boolean;
-        mode?: OrganizeImportsMode;
     }
     type CompletionsTriggerCharacter = "." | "\"" | "'" | "`" | "/" | "@" | "<" | "#" | " ";
     enum CompletionTriggerKind {
@@ -16821,7 +16793,6 @@ declare module "typescript" {
      */
     function getFormatCodeSettingsForWriting({ options }: formatting.FormatContext, sourceFile: SourceFile): FormatCodeSettings;
     function jsxModeNeedsExplicitImport(jsx: JsxEmit | undefined): boolean;
-    function isSourceFileFromLibrary(program: Program, node: SourceFile): boolean;
 }
 declare module "typescript" {
     enum ImportKind {
@@ -17443,7 +17414,7 @@ declare module "typescript" {
          *   2) Coalescing imports from the same module
          *   3) Sorting imports
          */
-        function organizeImports(sourceFile: SourceFile, formatContext: formatting.FormatContext, host: LanguageServiceHost, program: Program, preferences: UserPreferences, mode: OrganizeImportsMode): FileTextChanges[];
+        function organizeImports(sourceFile: SourceFile, formatContext: formatting.FormatContext, host: LanguageServiceHost, program: Program, preferences: UserPreferences, skipDestructiveCodeActions?: boolean): FileTextChanges[];
         /**
          * @param importGroup a list of ImportDeclarations, all with the same module name.
          */
@@ -18226,10 +18197,6 @@ declare module "typescript" {
 }
 declare module "typescript" {
     namespace codefix {
-    }
-}
-declare module "typescript" {
-    namespace codefix {
         /**
          * Finds members of the resolved type that are missing in the class pointed to by class decl
          * and generates source code for the missing members.
@@ -18438,6 +18405,11 @@ declare module "typescript" {
         interface TargetRange {
             readonly range: Expression | Statement[];
             readonly facts: RangeFacts;
+            /**
+             * A list of symbols that are declared in the selected range which are visible in the containing lexical scope
+             * Used to ensure we don't turn something used outside the range free (or worse, resolve to a different entity).
+             */
+            readonly declarations: Symbol[];
             /**
              * If `this` is referring to a function instead of class, we need to retrieve its type.
              */

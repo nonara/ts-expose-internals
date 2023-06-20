@@ -1,0 +1,34 @@
+name: Test (with Live)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'node'
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            yarn-
+
+      - name: Install Packages
+        run: yarn install --frozen-lockfile
+
+      - name: Test
+        run: yarn run test
+        env:
+          CI: true
+          LIVE_TEST: true

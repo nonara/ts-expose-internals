@@ -1,0 +1,9 @@
+{
+  "settings": {
+    "tsVersion": ">=5.0.0",
+    "maxAttempts": 7,
+    "tsRepoUrl": "https://github.com/microsoft/TypeScript.git",
+    "skipTags": []
+  },
+  "buildDetails": []
+}

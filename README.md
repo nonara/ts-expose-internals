@@ -11,9 +11,9 @@ Expose TypeScript internal types by simply adding a development dependency.
    ```jsonc
    {
      "devDependencies": {
-       "typescript": "^3.9.6",
+       "typescript": "^5.1.3",
        // Note: The package is 'ts-expose-internals', but we are aliasing within the @types scope to make TS adopt it globally
-       "@types/ts-expose-internals": "npm:ts-expose-internals@3.9.6"
+       "@types/ts-expose-internals": "npm:ts-expose-internals@5.1.3"
      }
    }
    ```
@@ -27,19 +27,19 @@ All internal types are now available within the primary typescript module
 import { JsDoc } from 'typescript'
 ```
 
-## How it works
+## How It Works
 
-This repository is deployed on a server which runs `scripts/cron.sh` every 12 hours.
+The code within this repo runs on a schedule every day via GitHub Actions.
 
-The scripts compare our release tags with the TypeScript compiler's tags. If new versions are detected,
-it builds the compiler source, with internal types included, and publishes a new release with its types.
+It checks for new TypeScript release tags, and if there are any, it clones the source code for that release and
+builds the internal types. After, it performs a bit of transformation magic and publishes the package to NPM.
 
 New types are added to the 'typescript' module via the 
 [Module Augmentation](https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation) technique.
 
 ## Notes
 
-- We publish for TS releases only. If you'd like nightly builds, have a look at [byots](https://github.com/basarat/byots).
+- We publish for full TS releases only. If you'd like nightly builds, have a look at [byots](https://github.com/basarat/byots).
 - If we don't have a package for the latest release, please allow 24hrs, then file an issue.
 
 ## Acknowledgments

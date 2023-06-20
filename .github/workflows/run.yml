@@ -1,0 +1,39 @@
+name: Run
+
+on:
+  schedule:
+    - cron: '1 0 * * *' # Run every day at 1:00 am UTC (9:00 pm EST)
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 'node'
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            yarn-
+
+      - name: Install Packages
+        run: yarn install --frozen-lockfile
+
+      - name: Setup git
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@github.com"
+          git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
+      - name: Run
+        run: yarn run run

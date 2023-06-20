@@ -1,0 +1,15 @@
+{
+  "settings": {
+    "tsVersion": ">=1.1.0",
+    "maxAttempts": 5,
+    "tsRepoUrl": "https://github.com/microsoft/TypeScript.git",
+    "skipTags": []
+  },
+  "buildDetails": [
+    { "tsVersion": "1.0.0", "tag": "v1.0.0", "attempts": 2, "complete": false, "lastAttempt": 0 },
+    { "tsVersion": "1.1.0", "tag": "v1.1.0", "attempts": 2, "complete": false, "lastAttempt": 0 },
+    { "tsVersion": "1.1.1", "tag": "v1.1.1", "attempts": 1, "complete": true, "lastAttempt": 0 },
+    { "tsVersion": "2.0.0", "tag": "v2.0.0", "attempts": 3, "complete": false, "lastAttempt": 0 },
+    { "tsVersion": "2.1.0", "tag": "v2.1.0", "attempts": 5, "complete": false, "lastAttempt": 0 }
+  ]
+}

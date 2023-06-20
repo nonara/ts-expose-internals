@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "strict": true,
+    "noUnusedLocals": false,
+    "noImplicitReturns": true,
+    "forceConsistentCasingInFileNames": true,
+    "useUnknownInCatchVariables": false,
+
+    "lib": [ "es2020" ],
+    "outDir": "dist",
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+
+    "newLine": "LF",
+    "allowJs": false,
+    "allowSyntheticDefaultImports": true
+  }
+}

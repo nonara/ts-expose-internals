@@ -1,4 +1,4 @@
-/.private
+/tmp
 
 # IDE
 /.idea
@@ -7,6 +7,3 @@
 # Junk
 node_modules
 .cache
-
-# TS repo
-/TypeScript

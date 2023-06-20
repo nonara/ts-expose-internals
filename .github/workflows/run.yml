@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  run:
     runs-on: ubuntu-latest
 
     steps:
@@ -29,11 +29,15 @@ jobs:
       - name: Install Packages
         run: yarn install --frozen-lockfile
 
-      - name: Setup git
+      - name: Configure git
         run: |
           git config user.name "GitHub Actions"
           git config user.email "github-actions@github.com"
           git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
+      - name: Configure npm
+        run: |
+          npm config set //registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
 
       - name: Run
         run: yarn run run

@@ -43,6 +43,7 @@ export function publish(context: TseiContext) {
     /* Copy files */
     const srcDir = path.join(context.repoRootDir, 'package-files');
     fs.readdirSync(srcDir).forEach(f => fs.copyFileSync(path.join(srcDir, f), path.join(destDir, f)));
+    fs.copyFileSync(path.join(context.repoRootDir, 'README.md'), path.join(destDir, 'README.md'));
 
     /* Write d.ts file */
     console.log(`[${versionTag}] Writing declarations & package...`);

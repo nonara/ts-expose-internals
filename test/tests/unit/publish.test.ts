@@ -67,9 +67,10 @@ describe(`publish.ts`, () => {
 
     test(`Copies package files`, () => {
       expect(readDirSyncSpy).toHaveBeenCalledWith(path.normalize('/root/dir/package-files'));
-      expect(copyFileSyncSpy).toHaveBeenCalledTimes(2);
+      expect(copyFileSyncSpy).toHaveBeenCalledTimes(3);
       expect(copyFileSyncSpy).toHaveBeenNthCalledWith(1, path.normalize('/root/dir/package-files/file1'), path.normalize('/tmp/publish/file1'));
       expect(copyFileSyncSpy).toHaveBeenNthCalledWith(2, path.normalize('/root/dir/package-files/file2'), path.normalize('/tmp/publish/file2'));
+      expect(copyFileSyncSpy).toHaveBeenNthCalledWith(3, path.normalize('/root/dir/README.md'), path.normalize('/tmp/publish/README.md'));
     });
 
     test('Writes DTS file', () => {

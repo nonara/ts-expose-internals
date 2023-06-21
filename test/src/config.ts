@@ -11,7 +11,8 @@ export const integrationTestCopyFiles = [
   'package-files',
   'package.json',
   'tsconfig.base.json',
-  'tsconfig.json'
+  'tsconfig.json',
+  'README.md'
 ];
 
 export const repoRootPath = path.join(__dirname, '..', '..');

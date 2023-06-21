@@ -42,3 +42,6 @@ jobs:
 
       - name: Run
         run: yarn run run
+        env:
+          CI: true
+          NODE_ENV: debug

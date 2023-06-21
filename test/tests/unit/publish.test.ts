@@ -24,6 +24,9 @@ const context = {
     buildDetail
   },
   repoRootDir: '/root/dir',
+  storage: {
+    buildDetails: [] as BuildDetail[]
+  }
 } as TseiContext;
 
 const destDir = '/tmp/publish';
@@ -75,7 +78,7 @@ describe(`publish.ts`, () => {
 
     test(`Publishes package ${dryRun ? '(with dry run)' : ''}`, () => {
       expect(execSyncSpy).toHaveBeenCalledWith(
-        `npm publish --ignore-scripts --tag "latest" ${dryRun ? '--dry-run' : ''}`,
+        `npm publish --ignore-scripts --tag "latest"${dryRun ? ' --dry-run' : ''}`,
         expect.objectContaining({
           cwd: destDir,
         })

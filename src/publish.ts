@@ -34,6 +34,7 @@ function getPreRelease(version: string) {
 
 export function publish(context: TseiContext) {
   const { dtsContent, buildDetail } = context.currentBuild!;
+  const { storage } = context;
   const versionTag = buildDetail.tag;
 
   withTmpDir('publish', destDir => {
@@ -54,13 +55,21 @@ export function publish(context: TseiContext) {
     });
 
     /* Publish */
-    console.log(buildDetail.tsVersion);
     const { prereleaseWithoutNumber } = getPreRelease(buildDetail.tsVersion);
-    const npmTag = prereleaseWithoutNumber || 'latest';
+    let npmTag = prereleaseWithoutNumber;
+
+    if (!prereleaseWithoutNumber) {
+      const highestCompletedTag = storage
+        .buildDetails
+        .filter(b => b.complete && b.tsVersion)
+        .sort((a, b) => semver.rcompare(a.tsVersion, b.tsVersion))[0];
+
+      if (!highestCompletedTag || semver.gt(buildDetail.tsVersion, highestCompletedTag.tsVersion)) npmTag = 'latest';
+    }
 
     console.log(`[${versionTag}] Publishing (tag: ${npmTag})...`);
     execCmd(
-      `npm publish --ignore-scripts --tag "${npmTag}" ${context.dryRun ? '--dry-run' : ''}`,
+      `npm publish --ignore-scripts ${npmTag ? `--tag "${npmTag}"` : ''}${context.dryRun ? ' --dry-run' : ''}`,
       {
         cwd: destDir,
         env: {

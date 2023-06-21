@@ -103,7 +103,7 @@ describe('ts-tags.ts', () => {
     });
 
     test(`Tags are in proper order`, () => {
-      expect(tags).toEqual([ 'v3.0.0', 'v2.3.1', 'v2.3.1-rc', 'v2.3-beta', 'v1.1.0' ]);
+      expect(tags).toEqual([ 'v1.1.0', 'v2.3-beta', 'v2.3.1-rc', 'v2.3.1', 'v3.0.0' ]);
     });
   });
 });

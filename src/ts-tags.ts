@@ -59,7 +59,7 @@ export function getApplicableTsTags(context: TseiContext): string[] {
     .filter(tag => semverSatisfies(tag, tsVersion)) // Matching tsVersion requirements
     .filter(tag => !context.storage.settings.skipTags.includes(tag)) // Not in skipTags
     .filter(tag => !context.storage.buildDetails.some(bd => bd.tag === tag && bd.complete)) // Not already built
-    .sort((a, b) => semver.rcompare(fixupVersionTag(a), fixupVersionTag(b))); // Descending order
+    .sort((a, b) => semver.compare(fixupVersionTag(a), fixupVersionTag(b))); // Descending order
 
   return tags;
 }

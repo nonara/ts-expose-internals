@@ -13,8 +13,8 @@
     "run": "ts-node -T -P tsconfig.json ./src/main.ts"
   },
   "author": {
-    "name": "Ron S.",
-    "email": "ron@crosstype.org"
+    "name": "Ron Spickenagel",
+    "url": "https://twitter.com/ron"
   },
   "repository": {
     "type": "git",

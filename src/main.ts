@@ -81,10 +81,7 @@ export function run(isDryRun: boolean = false) {
       if (!isDryRun) execCmd(`git push`, { env: { ...process.env }, cwd: baseContext.repoRootDir });
     }
 
-    if (encounteredErrors) {
-      console.error(`Finished with errors — see log above!`);
-      process.exit(1);
-    }
+    if (encounteredErrors) throw new Error(`Finished with errors — see log`);
   });
 }
 

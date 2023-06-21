@@ -76,7 +76,7 @@ export function run(isDryRun: boolean = false) {
       console.log(`Updating storage with ${updatedBuilds.length} new builds...`);
       storage.save(isDryRun);
 
-      if (!isDryRun) execCmd(`git push`, { env: { ...process.env }, cwd: buildDir });
+      if (!isDryRun) execCmd(`git push`, { env: { ...process.env }, cwd: baseContext.repoRootDir });
     }
   });
 }

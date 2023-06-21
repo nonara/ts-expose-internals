@@ -14,33 +14,34 @@
     },
     {
       "tag": "v5.0.3",
-      "attempts": 4,
-      "complete": false,
-      "lastAttempt": 1687316105929
+      "attempts": 5,
+      "complete": true,
+      "lastAttempt": 1687316198522,
+      "tsVersion": "5.0.3"
     },
     {
       "tag": "v5.0.4",
-      "attempts": 4,
+      "attempts": 5,
       "complete": false,
-      "lastAttempt": 1687316108792
+      "lastAttempt": 1687316249954
     },
     {
       "tag": "v5.1-beta",
-      "attempts": 4,
+      "attempts": 5,
       "complete": false,
-      "lastAttempt": 1687316108796
+      "lastAttempt": 1687316253882
     },
     {
       "tag": "v5.1-rc",
-      "attempts": 4,
+      "attempts": 5,
       "complete": false,
-      "lastAttempt": 1687316108802
+      "lastAttempt": 1687316254699
     },
     {
       "tag": "v5.1.3",
-      "attempts": 4,
+      "attempts": 5,
       "complete": false,
-      "lastAttempt": 1687316108806
+      "lastAttempt": 1687316255535
     }
   ]
 }

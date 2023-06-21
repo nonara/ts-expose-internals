@@ -35,7 +35,6 @@ function transformDts(context: ts.TransformationContext) {
     }
 
     function childVisitor(node: ts.Node): ts.Node {
-      // return node;
       /* Drop leading "ts." from qualified names */
       if (ts.isQualifiedName(node) && ts.isIdentifier(node.left) && node.left.text === 'ts') {
         return factory.createIdentifier(node.right.text);
@@ -45,7 +44,6 @@ function transformDts(context: ts.TransformationContext) {
     }
   }
 }
-
 
 // endregion
 

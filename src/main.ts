@@ -28,6 +28,7 @@ export function run(isDryRun: boolean = false) {
     const { tsRepoUrl } = storage.settings;
 
     /* Build */
+    let encounteredErrors = false;
     let updatedBuilds: BuildDetail[] = [];
     for (const tag of tags) {
       const context = { ...baseContext };
@@ -64,6 +65,7 @@ export function run(isDryRun: boolean = false) {
         /* Update build detail */
         buildDetail.complete = true;
       } catch (err) {
+        encounteredErrors = true;
         console.error(`Error: [${tag}] ${err}`);
         buildDetail.complete = false;
       } finally {
@@ -77,6 +79,11 @@ export function run(isDryRun: boolean = false) {
       storage.save(isDryRun);
 
       if (!isDryRun) execCmd(`git push`, { env: { ...process.env }, cwd: baseContext.repoRootDir });
+    }
+
+    if (encounteredErrors) {
+      console.error(`Finished with errors — see log above!`);
+      process.exit(1);
     }
   });
 }

@@ -102,7 +102,7 @@ childProcess.execSync = (command, opt) => {
     }
   }
 
-  else if (command.startsWith('npx rimraf')) {
+  else if (command.startsWith('npx -y rimraf')) {
     isValidCmd = true;
 
     currentVersion = '';

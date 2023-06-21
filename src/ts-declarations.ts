@@ -59,7 +59,7 @@ export function buildTsDeclarations(tsRepoUrl: string, versionTag: string, tsDir
   console.log(`[${versionTag}] Building declarations...`);
 
   /* Prepare */
-  execCmd('npx rimraf *', { cwd: tsDir }); // deletes any existing artifacts including node_modules
+  execCmd('npx -y rimraf ./* ./.*', { cwd: tsDir }); // wipe current directory
   execCmd(`git clone --depth 1 --branch ${versionTag} --no-tags ${tsRepoUrl} .`, { cwd: tsDir });
 
   /* Build DTS */

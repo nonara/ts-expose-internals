@@ -156,7 +156,7 @@ describe(`End-to-end Run`, () => {
       logContent = fs.readFileSync(path.join(tmpDir, 'log.txt'), 'utf8');
     });
 
-    test(`Create commit`, () => {
+    test(`Creates commit`, () => {
       expect(logContent).toContain('git commit -m "chore(storage): Updated storage"');
     });
 

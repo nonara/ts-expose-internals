@@ -11,6 +11,36 @@
       "attempts": 1,
       "complete": true,
       "lastAttempt": 1687314073085
+    },
+    {
+      "tag": "v5.0.3",
+      "attempts": 1,
+      "complete": false,
+      "lastAttempt": 1687315141463
+    },
+    {
+      "tag": "v5.0.4",
+      "attempts": 1,
+      "complete": false,
+      "lastAttempt": 1687315143262
+    },
+    {
+      "tag": "v5.1-beta",
+      "attempts": 1,
+      "complete": false,
+      "lastAttempt": 1687315143265
+    },
+    {
+      "tag": "v5.1-rc",
+      "attempts": 1,
+      "complete": false,
+      "lastAttempt": 1687315143268
+    },
+    {
+      "tag": "v5.1.3",
+      "attempts": 1,
+      "complete": false,
+      "lastAttempt": 1687315143273
     }
   ]
 }

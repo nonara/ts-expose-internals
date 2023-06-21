@@ -22,8 +22,6 @@ jobs:
         run: |
           npm config set //registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ./package-files/.npmrc
-          npm config list
-          echo "npm_config_registry: $npm_config_registry"
 
       - name: Cache dependencies
         uses: actions/cache@v2

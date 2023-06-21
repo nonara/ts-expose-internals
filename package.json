@@ -10,7 +10,7 @@
     "test:with_live": "npx cross-env LIVE_TEST=true jest --runInBand",
     "compile": "tsc",
     "-----------------": "-----------------",
-    "run": "ts-node -T -P tsconfig.json ./src/index.ts"
+    "run": "ts-node -T -P tsconfig.json ./src/main.ts"
   },
   "author": {
     "name": "Ron S.",

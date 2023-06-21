@@ -14,33 +14,33 @@
     },
     {
       "tag": "v5.0.3",
-      "attempts": 2,
+      "attempts": 3,
       "complete": false,
-      "lastAttempt": 1687315675222
+      "lastAttempt": 1687315971709
     },
     {
       "tag": "v5.0.4",
-      "attempts": 2,
+      "attempts": 3,
       "complete": false,
-      "lastAttempt": 1687315677355
+      "lastAttempt": 1687315973836
     },
     {
       "tag": "v5.1-beta",
-      "attempts": 2,
+      "attempts": 3,
       "complete": false,
-      "lastAttempt": 1687315678137
+      "lastAttempt": 1687315973840
     },
     {
       "tag": "v5.1-rc",
-      "attempts": 2,
+      "attempts": 3,
       "complete": false,
-      "lastAttempt": 1687315678937
+      "lastAttempt": 1687315973845
     },
     {
       "tag": "v5.1.3",
-      "attempts": 2,
+      "attempts": 3,
       "complete": false,
-      "lastAttempt": 1687315679817
+      "lastAttempt": 1687315973849
     }
   ]
 }

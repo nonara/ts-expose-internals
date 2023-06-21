@@ -29,7 +29,7 @@ import { JsDoc } from 'typescript'
 
 ## How It Works
 
-The code within this repo runs on a schedule every day via GitHub Actions.
+The code within this repo runs on a schedule of once per day via GitHub Actions.
 
 It checks for new TypeScript release tags, and if there are any, it clones the source code for that release and
 builds the internal types. After, it performs a bit of transformation magic and publishes the package to NPM.

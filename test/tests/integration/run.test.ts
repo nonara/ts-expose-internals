@@ -27,9 +27,9 @@ let wipeTmp: boolean | undefined;
  * Debug
  * ********************************************************* */
 
-process.env.TMP_ROOT_PATH = './tmp';
-wipeTmp = false;
-process.env.NODE_ENV = 'debug';    // Print extra debug info
+// process.env.TMP_ROOT_PATH = './tmp';
+// wipeTmp = false;
+// process.env.NODE_ENV = 'debug';    // Print extra debug info
 
 /* ********************************************************* *
  * Config

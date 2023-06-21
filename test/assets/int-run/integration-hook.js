@@ -78,6 +78,9 @@ childProcess.execSync = (command, opt) => {
       res = Buffer.from(versions.map(v => `0 refs/tags/${v}`).join('\n'));
     }
     else if (command.startsWith('git clone')) {
+      currentVersion = '';
+      writeLog('\n' + '-'.repeat(25) + '\n');
+
       const fixedTag = fixupVersionTag(command.split(' ')[5]);
       const version = fixedTag.replace(/^v/, '');
       currentVersion = version;
@@ -100,13 +103,6 @@ childProcess.execSync = (command, opt) => {
 
       copyRecursive(srcDir, destDir);
     }
-  }
-
-  else if (command.startsWith('npx -y rimraf')) {
-    isValidCmd = true;
-
-    currentVersion = '';
-    writeLog('\n' + '-'.repeat(25) + '\n');
   }
 
   else if (command.startsWith('npx hereby dts')) {

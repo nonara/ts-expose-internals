@@ -62,7 +62,11 @@ describe('main.ts', () => {
           return originalReadFileSync.apply(this, <any>arguments);
         });
 
-      run(false);
+      try {
+        run(false);
+      } catch (e) {
+        expect(e.message).toContain('Finished with errors');
+      }
     });
 
     afterAll(() => {

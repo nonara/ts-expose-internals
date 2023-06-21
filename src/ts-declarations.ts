@@ -2,6 +2,7 @@ import * as ts from 'typescript';
 import fs from 'fs';
 import path from 'path';
 import { execCmd } from './utils/exec';
+import { rimraf } from 'rimraf';
 
 
 /* ****************************************************************************************************************** */
@@ -59,7 +60,7 @@ export function buildTsDeclarations(tsRepoUrl: string, versionTag: string, tsDir
   console.log(`[${versionTag}] Building declarations...`);
 
   /* Prepare */
-  execCmd('npx -y rimraf ./* ./.*', { cwd: tsDir }); // wipe current directory
+  rimraf.sync(path.join(tsDir, "{*,.*}"), { glob: true }); // Wipe current directory
   execCmd(`git clone --depth 1 --branch ${versionTag} --no-tags ${tsRepoUrl} .`, { cwd: tsDir });
 
   /* Build DTS */

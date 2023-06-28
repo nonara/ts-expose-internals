@@ -46,6 +46,13 @@
       "complete": true,
       "lastAttempt": 1687317851333,
       "tsVersion": "5.1.3"
+    },
+    {
+      "tag": "v5.1.5",
+      "tsVersion": "5.1.5",
+      "attempts": 1,
+      "complete": true,
+      "lastAttempt": 1687912105130
     }
   ]
 }

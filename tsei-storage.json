@@ -84,9 +84,9 @@
     },
     {
       "tag": "v5.3-beta",
-      "attempts": 4,
+      "attempts": 5,
       "complete": false,
-      "lastAttempt": 1698366123762
+      "lastAttempt": 1698452474645
     }
   ]
 }

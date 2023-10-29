@@ -40,6 +40,22 @@ function transformDts(context: ts.TransformationContext) {
         return factory.createIdentifier(node.right.text);
       }
 
+      /* Drop "ts" from type references */
+      if (ts.isTypeReferenceNode(node) && ts.isIdentifier(node.typeName) && node.typeName.text === 'ts') {
+        return factory.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword); // Replace with 'any' or other type
+      }
+
+      /* Replace typeof ts with typeof import("typescript") */
+      if (ts.isTypeQueryNode(node) && ts.isIdentifier(node.exprName) && node.exprName.text === 'ts') {
+        return factory.createImportTypeNode(
+          factory.createLiteralTypeNode(factory.createStringLiteral("typescript")),
+          undefined,
+          undefined,
+          undefined,
+          true
+        );
+      }
+
       return ts.visitEachChild(node, childVisitor, context);
     }
   }

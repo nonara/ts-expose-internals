@@ -109,6 +109,13 @@
       "attempts": 1,
       "complete": true,
       "lastAttempt": 1701908611432
+    },
+    {
+      "tag": "v5.4-beta",
+      "tsVersion": "5.4.0-beta",
+      "attempts": 1,
+      "complete": true,
+      "lastAttempt": 1706574141474
     }
   ]
 }

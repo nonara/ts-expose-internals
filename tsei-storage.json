@@ -151,6 +151,12 @@
       "attempts": 1,
       "complete": true,
       "lastAttempt": 1712795029416
+    },
+    {
+      "tag": "v5.5-beta",
+      "attempts": 1,
+      "complete": false,
+      "lastAttempt": 1714091011514
     }
   ]
 }

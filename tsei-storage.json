@@ -157,6 +157,12 @@
       "attempts": 7,
       "complete": false,
       "lastAttempt": 1714609409748
+    },
+    {
+      "tag": "v5.5-rc",
+      "attempts": 1,
+      "complete": false,
+      "lastAttempt": 1717719923455
     }
   ]
 }

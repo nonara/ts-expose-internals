@@ -1,6 +1,8 @@
 declare module "typescript" {
-    const b: A;
+    const b: ts.A;
+    import * as ts from "typescript";
 }
 declare module "typescript" {
     type A = number;
+    import * as ts from "typescript";
 }

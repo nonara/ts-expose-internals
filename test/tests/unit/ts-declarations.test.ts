@@ -9,7 +9,7 @@ import { buildTsDeclarations, fixupTsDeclarations } from '../../../src/ts-declar
 /* ****************************************************************************************************************** */
 
 const mockInternalDeclarations = 'declare namespace ts { const b: ts.A; }\n declare namespace ts { type A = number; } \nexport = ts;\n';
-const expectedOutputDeclarations = 'declare module "typescript" { const b: A; } declare module "typescript" { type A = number; }\n';
+const expectedOutputDeclarations = 'declare module "typescript" { const b: ts.A; import * as ts from "typescript"; } declare module "typescript" { type A = number; import * as ts from "typescript"; }\n';
 
 // endregion
 

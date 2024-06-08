@@ -20,10 +20,27 @@ function transformDts(context: ts.TransformationContext) {
     function rootVisitor(node: ts.Statement): ts.VisitResult<ts.Node | undefined> {
       /* Transform namespace ts to module declaration */
       if (ts.isModuleDeclaration(node) && !!(node.flags & ts.NodeFlags.Namespace)) {
+        /* Append import * as ts from "typescript" as final statement */
+        const newModuleBlock = factory.createModuleBlock(
+          [
+            ...(node.body as ts.ModuleBlock).statements,
+            factory.createImportDeclaration(
+              undefined,
+              factory.createImportClause(
+                false,
+                undefined,
+                factory.createNamespaceImport(factory.createIdentifier("ts"))
+              ),
+              factory.createStringLiteral("typescript"),
+              undefined
+            )
+          ]
+        );
+
         return factory.createModuleDeclaration(
           node.modifiers,
           ts.factory.createStringLiteral('typescript'),
-          ts.visitEachChild(node.body as ts.ModuleBlock, childVisitor, context),
+          newModuleBlock,
           ts.NodeFlags.ExportContext | ts.NodeFlags.ContextFlags
         );
       }
@@ -32,31 +49,6 @@ function transformDts(context: ts.TransformationContext) {
         return undefined;
       }
       return node;
-    }
-
-    function childVisitor(node: ts.Node): ts.Node {
-      /* Drop leading "ts." from qualified names */
-      if (ts.isQualifiedName(node) && ts.isIdentifier(node.left) && node.left.text === 'ts') {
-        return factory.createIdentifier(node.right.text);
-      }
-
-      /* Drop "ts" from type references */
-      if (ts.isTypeReferenceNode(node) && ts.isIdentifier(node.typeName) && node.typeName.text === 'ts') {
-        return factory.createKeywordTypeNode(ts.SyntaxKind.AnyKeyword); // Replace with 'any' or other type
-      }
-
-      /* Replace typeof ts with typeof import("typescript") */
-      if (ts.isTypeQueryNode(node) && ts.isIdentifier(node.exprName) && node.exprName.text === 'ts') {
-        return factory.createImportTypeNode(
-          factory.createLiteralTypeNode(factory.createStringLiteral("typescript")),
-          undefined,
-          undefined,
-          undefined,
-          true
-        );
-      }
-
-      return ts.visitEachChild(node, childVisitor, context);
     }
   }
 }

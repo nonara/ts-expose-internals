@@ -160,9 +160,10 @@
     },
     {
       "tag": "v5.5-rc",
-      "attempts": 2,
-      "complete": false,
-      "lastAttempt": 1717806330630
+      "attempts": 3,
+      "complete": true,
+      "lastAttempt": 1717872639835,
+      "tsVersion": "5.5.1-rc"
     }
   ]
 }

@@ -222,9 +222,9 @@
     },
     {
       "tag": "v5.7-rc",
-      "attempts": 2,
+      "attempts": 3,
       "complete": false,
-      "lastAttempt": 1731198738275
+      "lastAttempt": 1731285060313
     }
   ]
 }

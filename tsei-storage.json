@@ -228,9 +228,9 @@
     },
     {
       "tag": "v5.7.2",
-      "attempts": 5,
+      "attempts": 6,
       "complete": false,
-      "lastAttempt": 1732667530879
+      "lastAttempt": 1732753937859
     }
   ]
 }

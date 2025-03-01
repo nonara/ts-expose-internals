@@ -243,6 +243,18 @@
       "attempts": 7,
       "complete": false,
       "lastAttempt": 1738715418061
+    },
+    {
+      "tag": "v5.8-rc",
+      "attempts": 1,
+      "complete": false,
+      "lastAttempt": 1740789262702
+    },
+    {
+      "tag": "v5.8.2",
+      "attempts": 1,
+      "complete": false,
+      "lastAttempt": 1740789299422
     }
   ]
 }

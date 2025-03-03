@@ -246,15 +246,15 @@
     },
     {
       "tag": "v5.8-rc",
-      "attempts": 2,
+      "attempts": 3,
       "complete": false,
-      "lastAttempt": 1740875641793
+      "lastAttempt": 1740961989088
     },
     {
       "tag": "v5.8.2",
-      "attempts": 2,
+      "attempts": 3,
       "complete": false,
-      "lastAttempt": 1740875678909
+      "lastAttempt": 1740962026107
     }
   ]
 }
